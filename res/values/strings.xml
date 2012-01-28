@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, WakeupTimerActivity!</string>
+    <string name="app_name">WakeupTimer</string>
+    <string name="intent_set_time">jp.peisun.wakeupTimer.intent.setTime</string>
+    
+
+</resources>
