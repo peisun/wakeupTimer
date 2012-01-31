@@ -14,10 +14,34 @@
             android:name=".WakeupTimerActivity" >
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity 
+            android:label="@string/app_name"
+            android:name="CalcActivity">
+			<intent-filter >
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <service android:name="timerService">
+            <intent-filter>
+                <action android:name="jp.peisun.wakeupTimer.intent.setTime"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.soundPlay"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.soundStop"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.snoozeStart"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.snoozeCancel"/>	
+        </intent-filter>    
+        </service>
+        
+        <receiver android:name="wakeupReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+            <intent-filter>
+                <!-- AlarmManagerからのインテントを受け取るレシーバ -->
+				<action android:name="jp.peisun.wakeupTimer.intent.wakeupAction"/>
+                <!-- デバイスブート時のインテントを受け取るレシーバ -->
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

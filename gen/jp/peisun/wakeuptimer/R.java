@@ -17,36 +17,45 @@ public final class R {
         public static final int AnswerTextView=0x7f050007;
         public static final int CountDownTextView=0x7f050003;
         public static final int ExpressionTextView=0x7f050006;
-        public static final int button1=0x7f050009;
-        public static final int button10=0x7f050016;
-        public static final int button11=0x7f050017;
-        public static final int button2=0x7f05000a;
-        public static final int button3=0x7f05000b;
-        public static final int button4=0x7f05000d;
+        public static final int MenutextView=0x7f05001d;
+        public static final int ValuetextView=0x7f05001e;
+        public static final int button0=0x7f050015;
+        public static final int button1=0x7f050013;
+        public static final int button13=0x7f050016;
+        public static final int button14=0x7f050017;
+        public static final int button2=0x7f050012;
+        public static final int button3=0x7f050011;
+        public static final int button4=0x7f05000f;
         public static final int button5=0x7f05000e;
-        public static final int button6=0x7f05000f;
-        public static final int button7=0x7f050011;
-        public static final int button8=0x7f050012;
-        public static final int button9=0x7f050013;
+        public static final int button6=0x7f05000d;
+        public static final int button7=0x7f05000b;
+        public static final int button8=0x7f05000a;
+        public static final int button9=0x7f050009;
+        public static final int buttonContinue=0x7f05001a;
+        public static final int buttonEnter=0x7f05001b;
         public static final int linearLayout1=0x7f050000;
         public static final int linearLayout2=0x7f050008;
         public static final int linearLayout3=0x7f05000c;
         public static final int linearLayout4=0x7f050010;
         public static final int linearLayout5=0x7f050001;
-        public static final int linearLayout6=0x7f050015;
-        public static final int linearLayout7=0x7f050014;
+        public static final int linearLayout6=0x7f050019;
+        public static final int linearLayout7=0x7f050018;
         public static final int linearLayout8=0x7f050005;
-        public static final int listView1=0x7f050018;
+        public static final int linearLayout9=0x7f050014;
+        public static final int menulistView=0x7f05001c;
         public static final int textView2=0x7f050002;
         public static final int textView4=0x7f050004;
     }
     public static final class layout {
         public static final int calclayout=0x7f030000;
         public static final int main=0x7f030001;
+        public static final int menu_row=0x7f030002;
     }
     public static final class string {
         public static final int app_name=0x7f040001;
         public static final int hello=0x7f040000;
         public static final int intent_set_time=0x7f040002;
+        public static final int preview=0x7f040004;
+        public static final int wakeupTime=0x7f040003;
     }
 }

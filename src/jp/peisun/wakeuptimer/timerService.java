@@ -20,9 +20,10 @@ import android.provider.Settings;
 
 public class timerService extends Service {
 	private final long OneMinute = 60*1000;
-	private final long INTERVAL_TIME = 24*60*1000;
-	private final int THREAD_SLEEP_TIME = 1000; 
-	private MediaPlayer player;
+	private final long INTERVAL_TIME = 24*60*60*1000;
+	private final long THREAD_SLEEP_TIME = 1000; 
+	private final long SNOOZE_DEFAULT_TIME = 10*60*000; /* 10分 */
+	private static MediaPlayer player;
 	private Snooze snooze = null;
 	private int setHour = 0;
 	private int setMinute = 0;
@@ -30,12 +31,17 @@ public class timerService extends Service {
 	public static final String WAKEUP_ACTION = "jp.peisun.wakeupTimer.intent.wakeupAction";
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
 	public static final String SOUND_STOP = "jp.peisun.wakeupTimer.intent.soundStop";
-	public static final String SOUND_SNOOZE = "jp.peisun.wakeupTimer.intent.soundSnooze";
+	public static final String SNOOZE_COUNTDOWON = "jp.peisun.wakeupTimer.intent.snoozeStart";
+	public static final String SNOOZE_CANCEL = "jp.peisun.wakeupTimer.intent.snoozeCancel";
+	
 	public static final String SET_HOUR = "setHour";
 	public static final String SET_MINUTE = "setMinute"; 
 	private AlarmManager am = null;
 	private Intent intent = null;
 	private PendingIntent mAlarmSender = null;
+	
+	private long mSnoozTime = SNOOZE_DEFAULT_TIME;
+	private Snooze mSnoozeThread = null;
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -79,13 +85,17 @@ public class timerService extends Service {
 		if(Action.equals(SOUND_PALY)){
 			soundPlay();
 		}
-		/* アラームの一時停止 */
-		if(Action.equals(SOUND_SNOOZE)){
-			soundStop();
+		/* アラームの開始 */
+		if(Action.equals(SNOOZE_COUNTDOWON)){
+			startSnooze();
 		}
 		/* アラームの停止 */
 		if(Action.equals(SOUND_STOP)){
 			soundStop();
+		}
+		/* スヌーズの停止 */
+		if(Action.equals(SNOOZE_CANCEL)){
+			cancelSnooze();
 		}
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -112,19 +122,8 @@ public class timerService extends Service {
         			calendar.getTimeInMillis(), 
         			INTERVAL_TIME,mAlarmSender);
 	}
-	private void setTime(int snoozeTime){
-		if(snooze != null){
-			snooze.cancel(true);	/* AsyncTaskのキャンセル */
-		}
-		snooze = new Snooze();
-		snooze.execute(snoozeTime);
-	}
-	private Handler AlarmHandler = new Handler(){
-		@Override
-        public void handleMessage(Message msg) {
-			if(msg.)
-		}
-	};
+
+
 	private void soundPlay(){
 		if(player == null){
 			player = new MediaPlayer();
@@ -167,23 +166,50 @@ public class timerService extends Service {
 
 	}
 	private void soundReplay(){
-		//最初に巻き戻し
-		player.seekTo(0);
-		//再生開始
-		player.start();
+		if(player == null){
+			soundPlay();
+		}
+		else {
+			//最初に巻き戻し
+			player.seekTo(0);
+			//再生開始
+			player.start();
+		}
 	}
 	private void soundStop(){
-		player.stop();
+		if(player != null){
+			player.stop();
+		}
 	}
-	class Snooze extends AsyncTask<Integer,Void,Boolean> {
+	/*
+	 * スヌーズ用のスレッド
+	 */
+	private void startSnooze(){
+		Long t = new Long(mSnoozTime);
+		mSnoozeThread = new Snooze();
+		mSnoozeThread.execute(t);
+	}
+	private void cancelSnooze(){
+		if(mSnoozeThread != null){
+			mSnoozeThread.cancel(true);
+		}
+	}
+	class Snooze extends AsyncTask<Long,Void,Boolean> {
 		long alarmTime = 0;
+		Intent intent = new Intent(SNOOZE_COUNTDOWON);
 		@Override
-		protected Boolean doInBackground(Integer... params) {
+		protected Boolean doInBackground(Long... params) {
 			// TODO 自動生成されたメソッド・スタブ
-			int snoozeTime = params[0].intValue();
+			Long snoozeTime = params[0].longValue();
 			while(this.isCancelled() == false || snoozeTime > 0){
-				Thread.sleep(THREAD_SLEEP_TIME);
+				try {
+					Thread.sleep(THREAD_SLEEP_TIME);
+				} catch (InterruptedException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				}
 				snoozeTime -= THREAD_SLEEP_TIME;
+				
 			}
 			if(this.isCancelled() == true) return false;
 			return true;
@@ -207,7 +233,7 @@ public class timerService extends Service {
 		@Override
 		protected void onCancelled() {
 			// TODO 自動生成されたメソッド・スタブ
-			soundPlay();
+			soundStop();
 			super.onCancelled();
 		}
 
