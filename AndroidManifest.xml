@@ -23,22 +23,24 @@
             android:screenOrientation="portrait">
 			<intent-filter >
                 <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="jp.peisun.wakeupTimer.intent.calcActivity"/>
             </intent-filter>
         </activity>
         <service android:name="timerService">
             <intent-filter>
+                <action android:name="jp.peisun.wakeupTimer.intent.wakeup"/>
                 <action android:name="jp.peisun.wakeupTimer.intent.setTime"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.soundPlay"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.soundStop"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeStart"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeCancel"/>	
+				<action android:name="jp.peisun.wakeupTimer.intent.boot_completed"/>
         </intent-filter>    
         </service>
         
-        <receiver android:name="wakeupReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+        <receiver android:name="wakeupReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED" >
             <intent-filter>
-                <!-- AlarmManagerからのインテントを受け取るレシーバ -->
-				<action android:name="jp.peisun.wakeupTimer.intent.wakeupAction"/>
                 <!-- デバイスブート時のインテントを受け取るレシーバ -->
             <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

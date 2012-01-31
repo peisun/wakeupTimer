@@ -13,6 +13,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.*;
 
 public class CalcActivity extends Activity implements OnClickListener {
@@ -22,16 +24,16 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private static final String POSITIVE_NEXT = "次です";
 	private static final int TICK_TIME = 1000;
 	private static final int REMAINING_TIME = 30*1000;
-	private static final int DEFAULT_REPEAT = 5;
+	private static final int DEFAULT_REPEAT = 2;
 	private volatile long remainingTime = REMAINING_TIME;
 	private static final int MSG_COUNTDOWN = 1;
 	private static final int MSG_CANCEL = 2;
 	private final int BUTTON_CLR = 0x0c;
 	private final int BUTTON_ENTER = 0x0e;
 	private final int BUTTON_CONTINUE = 0x0f;
-	private final int TERM_1_SIZE = 10;
+	private final int TERM_1_SIZE = 100;
 	private final int TERM_2_SIZE = 10;
-	private final int TERM_3_SIZE = 10;
+	private final int TERM_3_SIZE = 100;
 	private CountdownHandler mCountdownHandler = new CountdownHandler();
 	private HashMap<Button,Integer> buttonMap = new HashMap<Button,Integer>();
 	private Button button0,button1,button2,button3,button4,button5,button6,
@@ -126,8 +128,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 		int a = Math.abs(r.nextInt()%TERM_1_SIZE);
 		int b = Math.abs(r.nextInt()%TERM_2_SIZE);
 		int c = Math.abs(r.nextInt()%TERM_3_SIZE);
+		expressionView = (TextView)findViewById(R.id.ExpressionTextView);
 		expressionView.setText(String.format("%d×%d+%d= ",a,b,c));
 		creatAnswer = a*b+c;
+		/* 解答欄を空欄にする */
+		numberView = (TextView)findViewById(R.id.AnswerTextView);
+		numberView.setText(null);
 	}
 	
 	private void setTextCountDown(long time){
@@ -203,6 +209,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			CharSequence cs = numberView.getText();
 			String as = cs.toString();
 			int a = Integer.parseInt(as);
+			
 			if(a == creatAnswer){
 				showNextDialog("正解です");
 				mRepeat--;
@@ -210,7 +217,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 			else {
 				showNextDialog("間違いです");
 			}
-			
+			keytouch = 0;
+			answer = 0;
 			if(mRepeat <= 0){
 				showFinishDilag();
 			}
@@ -230,7 +238,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 		startService(intent);
 	}
 	private void sendSnoozeStartIntent(){
-		Intent intent = new Intent(timerService.SNOOZE_COUNTDOWON);
+		Intent intent = new Intent(timerService.SNOOZE_START);
+		intent.putExtra(timerService.SNOOZE, REMAINING_TIME);
 		startService(intent);
 	}
 	private void sendSnoozeCancelIntent(){
@@ -249,6 +258,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 				// TODO 自動生成されたメソッド・スタブ
 				sendSoundStopIntent();
 				sendSnoozeStartIntent(); /* 「やる」と言っておきながら、やらなかったら困るのでスヌーズをかけておく */
+				
 				startCountDown();
 			}
 		});
@@ -279,19 +289,32 @@ public class CalcActivity extends Activity implements OnClickListener {
 					stopCountDown();
 					finish(); /* プレビューなら終わる */
 				}
+				else {
+					createExpression();
+				}
 			}
 			
 		});
 		dlg.show();
 		startCountDown();
-		sendSnoozeStartIntent(); /* 問題を解いたところで寝てしまったら困るからスヌーズをかける */
+		//sendSnoozeStartIntent(); /* 問題を解いたところで寝てしまったら困るからスヌーズをかける */
 	}
+	
 	private void showFinishDilag(){
 		sendSnoozeCancelIntent();
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		//dlg.setTitle("TEST");
 		dlg.setMessage("おしまいです。¥n起きましたか？");
-		dlg.setPositiveButton("OK", null);
+		dlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO 自動生成されたメソッド・スタブ
+				Intent intent = new Intent(wakeupReceiver.BOOT_ACTION);
+				startService(intent);
+			}
+			
+		});
 		dlg.show();
 		stopCountDown();
 		

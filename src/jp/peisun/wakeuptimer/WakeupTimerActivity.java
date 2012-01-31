@@ -1,11 +1,17 @@
 package jp.peisun.wakeuptimer;
 
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,6 +23,7 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 /*
  * 各種設定をするActivity.
@@ -24,6 +31,8 @@ import android.widget.TimePicker;
  */
 public class WakeupTimerActivity extends Activity implements OnItemClickListener {
     /** Called when the activity is first created. */
+	private static final String TITLE_ERROR = "エラー";
+	private static final String ERROR_WRITE_FILE_SETTIME = "起床時間をファイルに書き込めませんでした。¥n次回起動時に起床時間を設定できないです";
 	private ArrayList<MenuList> mMenuItem = new ArrayList<MenuList>();
 	private ListView mListView = null;
 	private TimePickerDialog timePickerDialog  = null;
@@ -63,11 +72,31 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
                 @Override
                 public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
                 	sendSetTimeIntent(hourOfDay,minute);
+                	try {
+                		writeSetTime(hourOfDay,minute);
+                		changeMenuList(0,mMenuItem.get(0).getMenuText(),String.format("%d:%d",hourOfDay,minute));
+                	}
+                	catch(Exception e){
+                		showErrorDialog(ERROR_WRITE_FILE_SETTIME);
+                	}
                 }
             }, hour, minute, true);
     	}
         timePickerDialog.show();
     	
+    }
+	private void showErrorDialog(String text){
+		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
+		
+		dlg.setTitle(TITLE_ERROR);
+		dlg.setMessage(text);
+		dlg.setPositiveButton("OK", null);
+		dlg.show();
+		
+	}
+    private void shotToast(String text){
+    	Toast toast = Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG);
+    	toast.show();
     }
     private void sendSetTimeIntent(int hour,int minute){
     	Intent intent = new Intent(timerService.INTENT_SETTIME);
@@ -87,16 +116,43 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	}
     	
     }
+    private void changeMenuList(int position,String text,String Value){
+    	if(mMenuItem != null){
+    		MenuList menu = mMenuItem.get(position);
+    		menu.setMenuText(text);
+    		menu.setMenuValue(Value);
+    		mListView.setAdapter(new MenuAdapter(this,mMenuItem));
+    	}
+    }
+    public String[] readSetTime(){
+    	String time_text = null;
+    	String menu_text = null;
+    	try {
+    		time_text = readSetTimeFile();
+    	}
+    	catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	menu_text = getString(R.string.wakeupTime);
+    	String[] splitText = menu_text.split(","); 
+    	if(time_text != null){
+    		splitText[1] = time_text;
+    	}
+    	else {
+    		String[] timeSplit = splitText[1].split(":");
+    		splitText[1] = String.format("%02d:%02d", Integer.parseInt(timeSplit[0]),Integer.parseInt(timeSplit[1]));
+    	}
+        return splitText;
+    }
     private void makeMenuList(){
-    	String text = getString(R.string.wakeupTime);
-        String[] splitText = text.split(",");
+    	String[] splitText = readSetTime();
         MenuList menu = new MenuList();
         menu.setMenuText(splitText[0]);
         menu.setMenuValue(splitText[1]);
         mMenuItem.add(menu);
         
-        text = getString(R.string.preview);
-        splitText = text.split(",");
+        String menu_text = getString(R.string.preview);
+        splitText = menu_text.split(",");
         menu = new MenuList();
         menu.setMenuText(splitText[0]);
         menu.setMenuValue(splitText[1]);
@@ -106,6 +162,26 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
         menu.setMenuText(null);
         menu.setMenuValue(null);
         mMenuItem.add(menu);
+    }
+    public String readSetTimeFile() throws Exception {
+    	InputStream in = openFileInput(timerService.FILE_SETTIME);  
+    	ObjectInputStream ois = new ObjectInputStream(in);  
+    	String setTime = (String)ois.readObject();
+    	ois.close();
+    	in.close();
+    	return setTime;
+    }
+    private void writeSetTime(int hour,int minute) throws Exception {
+    	OutputStream out = null;
+    	ObjectOutputStream oos = null;
+    	String setTime = String.format("%d:%d", hour,minute);
+    	
+    	out = openFileOutput(timerService.FILE_SETTIME, MODE_PRIVATE);
+    	oos = new ObjectOutputStream(out);  
+    	oos.writeObject(setTime);
+    	oos.close();
+    	out.close();
+    	
     }
     /*
      * メニューリストアダプター

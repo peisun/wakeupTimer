@@ -3,6 +3,8 @@ package jp.peisun.wakeuptimer;
 
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import android.app.AlarmManager;
@@ -16,28 +18,34 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 
 
 public class timerService extends Service {
+	private static final String TAG = "timerService";
 	private final long OneMinute = 60*1000;
 	private final long INTERVAL_TIME = 24*60*60*1000;
 	private final long THREAD_SLEEP_TIME = 1000; 
 	private final long SNOOZE_DEFAULT_TIME = 10*60*000; /* 10分 */
 	private static MediaPlayer player;
 	private Snooze snooze = null;
-	private int setHour = 0;
-	private int setMinute = 0;
+	private int mSetHour = 0;
+	private int mSetMinute = 0;
+	
+	public static final String  FILE_SETTIME = "setTime";
+	
+	public static final String ACTION_WAKEUP = "jp.peisun.wakeupTimer.intent.wakeup";
 	public static final String INTENT_SETTIME = "jp.peisun.wakeupTimer.intent.setTime";
-	public static final String WAKEUP_ACTION = "jp.peisun.wakeupTimer.intent.wakeupAction";
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
 	public static final String SOUND_STOP = "jp.peisun.wakeupTimer.intent.soundStop";
-	public static final String SNOOZE_COUNTDOWON = "jp.peisun.wakeupTimer.intent.snoozeStart";
+	public static final String SNOOZE_START = "jp.peisun.wakeupTimer.intent.snoozeStart";
 	public static final String SNOOZE_CANCEL = "jp.peisun.wakeupTimer.intent.snoozeCancel";
 	
 	public static final String SET_HOUR = "setHour";
 	public static final String SET_MINUTE = "setMinute"; 
+	public static final String SNOOZE = "snooze";
 	private AlarmManager am = null;
-	private Intent intent = null;
+	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
 	
 	private long mSnoozTime = SNOOZE_DEFAULT_TIME;
@@ -51,11 +59,12 @@ public class timerService extends Service {
 	@Override
 	public void onCreate() {
 		// TODO 自動生成されたメソッド・スタブ
-		// set intentC
-		intent = new Intent();
-	    intent.setAction(WAKEUP_ACTION);   
-	    am = (AlarmManager)getSystemService(ALARM_SERVICE);
-		mAlarmSender = PendingIntent.getService(this,0, intent, 0);
+		// set intent
+		
+	    
+		
+		am = (AlarmManager)getSystemService(ALARM_SERVICE);
+		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
         
 		super.onCreate();
 	}
@@ -67,6 +76,7 @@ public class timerService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO 自動生成されたメソッド・スタブ
+		super.onStartCommand(intent, flags, startId);
 		String Action;
 		if (intent != null) {
 			Action = intent.getAction();
@@ -74,31 +84,81 @@ public class timerService extends Service {
 		} else {
 			Action = "";
 		}
+		/* Boot時の設定 */
+		if(Action.equals(wakeupReceiver.BOOT_ACTION)){
+			Log.d(TAG,"intent:"+wakeupReceiver.BOOT_ACTION);
+			try {
+				int[] time = readSetTimeFile();
+				mSetHour = time[0];
+				mSetMinute = time[1];
+				alarmSetTime(mSetHour,mSetMinute);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 		/* 起床時間の設定 */
-		if(Action.equals(INTENT_SETTIME)){
-			setHour = intent.getIntExtra(SET_HOUR, 6);
-			setMinute = intent.getIntExtra(SET_MINUTE, 0);
-			alarmSetTime(setHour,setMinute);
+		else if(Action.equals(INTENT_SETTIME)){
+			Log.d(TAG,"intent:"+INTENT_SETTIME);
+			mSetHour = intent.getIntExtra(SET_HOUR, 6);
+			mSetMinute = intent.getIntExtra(SET_MINUTE, 30);
+			alarmSetTime(mSetHour,mSetMinute);
 						
 		}
+		
 		/* アラームの鳴動 */
-		if(Action.equals(SOUND_PALY)){
+		else if(Action.equals(SOUND_PALY)){
+			Log.d(TAG,"intent:"+SOUND_PALY);
 			soundPlay();
 		}
 		/* アラームの開始 */
-		if(Action.equals(SNOOZE_COUNTDOWON)){
-			startSnooze();
+		else if(Action.equals(SNOOZE_START)){
+			Log.d(TAG,"intent:"+SNOOZE_START);
+			mSnoozTime = intent.getLongExtra(SNOOZE, SNOOZE_DEFAULT_TIME);
+			startSnooze(mSnoozTime);
 		}
 		/* アラームの停止 */
-		if(Action.equals(SOUND_STOP)){
+		else if(Action.equals(SOUND_STOP)){
+			Log.d(TAG,"intent:"+SOUND_STOP);
 			soundStop();
 		}
 		/* スヌーズの停止 */
-		if(Action.equals(SNOOZE_CANCEL)){
+		else if(Action.equals(SNOOZE_CANCEL)){
+			Log.d(TAG,"intent:"+SNOOZE_CANCEL);
 			cancelSnooze();
 		}
-		return super.onStartCommand(intent, flags, startId);
+		else if(Action.equals(ACTION_WAKEUP)){
+			Log.d(TAG,"intent:"+ACTION_WAKEUP);
+			am.cancel(PendingIntent.getService(this,0, wakeup_intent, 0));
+			// アラームの鳴動
+			soundPlay();
+			
+			// CalcActivityを呼び出す
+			Intent ia = new Intent(timerService.this,CalcActivity.class);
+			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
+			ia.putExtra(CalcActivity.PREVIEW, false);
+			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(ia);
+			
+		}
+		return START_STICKY;
+		// super.onStartCommand(intent, flags, startId);
 	}
+	private int[] readSetTimeFile() throws Exception {
+    	InputStream in = openFileInput(timerService.FILE_SETTIME);  
+    	ObjectInputStream ois = new ObjectInputStream(in);  
+    	String setTime = (String)ois.readObject();
+    	ois.close();
+    	in.close();
+    	
+    	int[] time = new int[2]; 
+    	if(setTime != null){
+    		String[] timeSplit = setTime.split(":");
+    		time[0]=Integer.parseInt(timeSplit[0]);
+    		time[1]=Integer.parseInt(timeSplit[1]);
+    	}
+    	return time;
+    }
 	private void alarmSetTime(int hour, int minute){
 		// Schedule the alarm!
 		// 0時を超えてないかったら、翌日
@@ -111,16 +171,12 @@ public class timerService extends Service {
 		if(rightNow.get(Calendar.HOUR_OF_DAY) == calendar.get(Calendar.HOUR_OF_DAY)){
 			calendar.add(Calendar.DATE, 1);
 		}
-		else {
-			calendar.add(Calendar.DATE, 0);
-		}
 		calendar.set(Calendar.HOUR_OF_DAY, hour);
 		calendar.set(Calendar.MINUTE, minute);
 		calendar.set(Calendar.SECOND, 0);
-        //am.set(AlarmManager.RTC,calendar.getTimeInMillis(),mAlarmSender);
-        am.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-        			calendar.getTimeInMillis(), 
-        			INTERVAL_TIME,mAlarmSender);
+		Log.d(TAG,"setTime:"+calendar.get(Calendar.HOUR_OF_DAY)+":"+calendar.get(Calendar.MINUTE));
+        am.set(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),mAlarmSender);
+
 	}
 
 
@@ -184,8 +240,8 @@ public class timerService extends Service {
 	/*
 	 * スヌーズ用のスレッド
 	 */
-	private void startSnooze(){
-		Long t = new Long(mSnoozTime);
+	private void startSnooze(long snooze_time){
+		Long t = new Long(snooze_time);
 		mSnoozeThread = new Snooze();
 		mSnoozeThread.execute(t);
 	}
@@ -196,12 +252,11 @@ public class timerService extends Service {
 	}
 	class Snooze extends AsyncTask<Long,Void,Boolean> {
 		long alarmTime = 0;
-		Intent intent = new Intent(SNOOZE_COUNTDOWON);
 		@Override
 		protected Boolean doInBackground(Long... params) {
 			// TODO 自動生成されたメソッド・スタブ
-			Long snoozeTime = params[0].longValue();
-			while(this.isCancelled() == false || snoozeTime > 0){
+			long snoozeTime = params[0].longValue();
+			while(this.isCancelled() == false && snoozeTime > 0){
 				try {
 					Thread.sleep(THREAD_SLEEP_TIME);
 				} catch (InterruptedException e) {
