@@ -76,11 +76,10 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	startService(intent);
     }
     private void selectCalcPreview(){
-    	Intent intent;
     	try {
     		
-    		intent = new Intent(WakeupTimerActivity.this,CalcActivity.class);
-    		intent.putExtra(CalcActivity.RESULT, true);
+    		Intent intent = new Intent(getApplicationContext(),CalcActivity.class);
+    		intent.putExtra(CalcActivity.PREVIEW, true);
         	startActivityForResult(intent,0);
     	}
     	catch(Exception e){
