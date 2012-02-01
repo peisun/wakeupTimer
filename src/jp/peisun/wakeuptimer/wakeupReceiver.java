@@ -14,8 +14,6 @@ import android.util.Log;
 public class wakeupReceiver extends BroadcastReceiver {
 	private static final String TAG = "BroadcastReceiver";
 	private Context mContext;
-	public static final String BOOT_ACTION = "jp.peisun.wakeupTimer.intent.boot_completed";
-	public static final String CALCACTIVITY_VIEW = "jp.peisun.wakeupTimer.intent.calcActivity.VIEW";
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -23,7 +21,7 @@ public class wakeupReceiver extends BroadcastReceiver {
 		mContext = context;
 		String action = intent.getAction();
 		if(action.equals(Intent.ACTION_BOOT_COMPLETED)){
-			Intent i = new Intent(BOOT_ACTION);
+			Intent i = new Intent(timerService.BOOT_ACTION);
 			mContext.startService(i);
 			
 		}

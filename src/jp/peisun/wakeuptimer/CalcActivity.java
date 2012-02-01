@@ -1,15 +1,20 @@
 package jp.peisun.wakeuptimer;
 
 import android.app.Activity;
+import android.app.KeyguardManager;
+import android.app.KeyguardManager.KeyguardLock;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.Button;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 
@@ -48,8 +53,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private int mRepeat = DEFAULT_REPEAT;
 	
 	private Long limitTime = new Long(REMAINING_TIME);
-	
+	private long mSnoozeTime = timerService.SNOOZE_DEFAULT_TIME;
 	private WaitTimeThread mWaitThread = null;
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -113,6 +120,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
+		
 		showStartDialog();
 		createExpression();
 		super.onResume();
@@ -122,6 +130,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onPause();
 	}
+	
 	private void createExpression(){
 		long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
 		Random r = new Random(seed);
@@ -238,8 +247,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 		startService(intent);
 	}
 	private void sendSnoozeStartIntent(){
+		Long snoozeTime = new Long(mSnoozeTime);
 		Intent intent = new Intent(timerService.SNOOZE_START);
-		intent.putExtra(timerService.SNOOZE, REMAINING_TIME);
+		intent.putExtra(timerService.SNOOZE, snoozeTime);
 		startService(intent);
 	}
 	private void sendSnoozeCancelIntent(){
@@ -256,6 +266,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				// TODO 自動生成されたメソッド・スタブ
+				
 				sendSoundStopIntent();
 				sendSnoozeStartIntent(); /* 「やる」と言っておきながら、やらなかったら困るのでスヌーズをかけておく */
 				
@@ -310,7 +321,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO 自動生成されたメソッド・スタブ
-				Intent intent = new Intent(wakeupReceiver.BOOT_ACTION);
+				Intent intent = new Intent(timerService.BOOT_ACTION);
 				startService(intent);
 			}
 			
