@@ -16,9 +16,10 @@ public final class R {
     public static final class id {
         public static final int AnswerTextView=0x7f050007;
         public static final int CountDownTextView=0x7f050003;
+        public static final int DetailsTextView=0x7f050021;
         public static final int ExpressionTextView=0x7f050006;
-        public static final int MenutextView=0x7f05001d;
-        public static final int ValuetextView=0x7f05001e;
+        public static final int MenutextView=0x7f050020;
+        public static final int ValuetextView=0x7f050022;
         public static final int button0=0x7f050015;
         public static final int button1=0x7f050013;
         public static final int button13=0x7f050016;
@@ -33,6 +34,9 @@ public final class R {
         public static final int button9=0x7f050009;
         public static final int buttonContinue=0x7f05001a;
         public static final int buttonEnter=0x7f05001b;
+        public static final int checkBox1=0x7f05001f;
+        public static final int chkDetailsTextView=0x7f05001e;
+        public static final int chkMenutextView=0x7f05001d;
         public static final int linearLayout1=0x7f050000;
         public static final int linearLayout2=0x7f050008;
         public static final int linearLayout3=0x7f05000c;
@@ -48,14 +52,21 @@ public final class R {
     }
     public static final class layout {
         public static final int calclayout=0x7f030000;
-        public static final int main=0x7f030001;
-        public static final int menu_row=0x7f030002;
+        public static final int listviewdivider=0x7f030001;
+        public static final int main=0x7f030002;
+        public static final int menu_check=0x7f030003;
+        public static final int menu_row=0x7f030004;
     }
     public static final class string {
+        public static final int alarm=0x7f040005;
         public static final int app_name=0x7f040001;
         public static final int hello=0x7f040000;
-        public static final int intent_set_time=0x7f040002;
-        public static final int preview=0x7f040004;
-        public static final int wakeupTime=0x7f040003;
+        public static final int intent_set_time=0x7f040003;
+        public static final int menulist=0x7f040002;
+        public static final int preview=0x7f040008;
+        public static final int snooze=0x7f040007;
+        public static final int snoozeTime=0x7f040009;
+        public static final int vibration=0x7f040006;
+        public static final int wakeupTime=0x7f040004;
     }
 }

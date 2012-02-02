@@ -10,16 +10,16 @@
         android:layout_height="wrap_content"
         android:orientation="vertical" 
         >
-
+<include layout="@layout/listviewdivider" />
         <ListView
             android:id="@+id/menulistView"
            	android:layout_width="match_parent"
-            android:divider="#A9A9A9"
-            android:dividerHeight="4px"
             android:layout_height="0dip"
-        	android:layout_weight="1">
+        	android:layout_weight="1" 
+        	android:footerDividersEnabled="true" 
+        	android:headerDividersEnabled="true">
         </ListView>
-
+<include layout="@layout/listviewdivider" />
     </LinearLayout>
 
 </LinearLayout>

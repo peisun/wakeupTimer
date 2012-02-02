@@ -3,9 +3,13 @@
 
     <string name="hello">Hello World, WakeupTimerActivity!</string>
     <string name="app_name">WakeupTimer</string>
+    <string name="menulist">起床時間,プレビュー,アラーム,バイブレーション</string>
     <string name="intent_set_time">jp.peisun.wakeupTimer.intent.setTime</string>
-    <string name="wakeupTime">起床時間,6:30</string>
-    <string name="preview">プレビュー,試してみる</string>
-    
+    <string name="wakeupTime">時刻,06:30,text,起床時間を設定します</string>
+    <string name="alarm">アラーム,true,check,起床時間にアラームを鳴らします</string>
+    <string name="vibration">バイブレーション,true,check,起床時間に震えます</string>
+    <string name="snooze">スヌーズ,true,spinner,10分</string>
+    <string name="preview">プレビュー,試してみる,text,計算問題を試してみます</string>
+    <string name="snoozeTime">なし,5分,10分,15分</string>
 
 </resources>
