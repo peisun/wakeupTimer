@@ -39,6 +39,7 @@
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeStart"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeCancel"/>	
 				<action android:name="jp.peisun.wakeupTimer.intent.boot_completed"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.finish"/>
         </intent-filter>    
         </service>
         

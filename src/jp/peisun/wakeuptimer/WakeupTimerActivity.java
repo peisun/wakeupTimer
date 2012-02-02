@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -74,7 +75,10 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
                 	sendSetTimeIntent(hourOfDay,minute);
                 	try {
                 		writeSetTime(hourOfDay,minute);
-                		changeMenuList(0,mMenuItem.get(0).getMenuText(),String.format("%d:%d",hourOfDay,minute));
+                		Date d = new Date();
+                    	d.setHours(hourOfDay);
+                    	d.setMinutes(minute);
+                		changeMenuList(0,mMenuItem.get(0).getMenuText(),String.format("%tH:%tM", d,d));
                 	}
                 	catch(Exception e){
                 		showErrorDialog(ERROR_WRITE_FILE_SETTIME);
@@ -127,25 +131,28 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     public String[] readSetTime(){
     	String time_text = null;
     	String menu_text = null;
+    	menu_text = getString(R.string.wakeupTime);
+    	String[] splitText = menu_text.split(","); 
     	try {
     		time_text = readSetTimeFile();
+    		splitText[1] = time_text;
     	}
     	catch(Exception e){
     		e.printStackTrace();
     	}
-    	menu_text = getString(R.string.wakeupTime);
-    	String[] splitText = menu_text.split(","); 
-    	if(time_text != null){
-    		splitText[1] = time_text;
-    	}
-    	else {
-    		String[] timeSplit = splitText[1].split(":");
-    		splitText[1] = String.format("%02d:%02d", Integer.parseInt(timeSplit[0]),Integer.parseInt(timeSplit[1]));
-    	}
+
+    	String[] timeSplit = splitText[1].split(":");
+    	Date d = new Date();
+    	d.setHours(Integer.parseInt(timeSplit[0]));
+    	d.setMinutes(Integer.parseInt(timeSplit[1]));
+    	splitText[1] = String.format("%tH:%tM", d,d);
+    	
         return splitText;
     }
     private void makeMenuList(){
-    	String[] splitText = readSetTime();
+    	
+    	 String[] splitText = readSetTime();
+    	
         MenuList menu = new MenuList();
         menu.setMenuText(splitText[0]);
         menu.setMenuValue(splitText[1]);

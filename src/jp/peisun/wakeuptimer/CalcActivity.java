@@ -1,6 +1,7 @@
 package jp.peisun.wakeuptimer;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -23,22 +25,29 @@ import java.io.ObjectInputStream;
 import java.util.*;
 
 public class CalcActivity extends Activity implements OnClickListener {
+	private final String TAG = "CalcActivity";
 	private boolean preview = false;
 	public static final String PREVIEW = "preview";
 	private static final String POSITIVE_PREVIEW = "プレビューを終わります";
 	private static final String POSITIVE_NEXT = "次です";
 	private static final int TICK_TIME = 1000;
-	private static final int REMAINING_TIME = 30*1000;
-	private static final int DEFAULT_REPEAT = 2;
-	private volatile long remainingTime = REMAINING_TIME;
+	private static final int REMAINING_TIME = 60*1000;
+	private static final int DEFAULT_REPEAT = 1;
 	private static final int MSG_COUNTDOWN = 1;
 	private static final int MSG_CANCEL = 2;
+	private static final int MSG_FINISH = 3;
 	private final int BUTTON_CLR = 0x0c;
 	private final int BUTTON_ENTER = 0x0e;
 	private final int BUTTON_CONTINUE = 0x0f;
-	private final int TERM_1_SIZE = 100;
+	private final int TERM_1_SIZE = 1000;
 	private final int TERM_2_SIZE = 10;
-	private final int TERM_3_SIZE = 100;
+	private final int TERM_3_SIZE = 1000;
+	
+	private final int FINISH_DIALOG_ID = 1;
+	private final int NEXT_CORRECT_DIALOG_ID = 2;
+	private final int NEXT_DISTRACTER_DIALOG_ID = 3;
+	private final int START_DIALOG_ID = 4;
+	
 	private CountdownHandler mCountdownHandler = new CountdownHandler();
 	private HashMap<Button,Integer> buttonMap = new HashMap<Button,Integer>();
 	private Button button0,button1,button2,button3,button4,button5,button6,
@@ -52,11 +61,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private int creatAnswer = 0;
 	private int mRepeat = DEFAULT_REPEAT;
 	
-	private Long limitTime = new Long(REMAINING_TIME);
-	private long mSnoozeTime = timerService.SNOOZE_DEFAULT_TIME;
-	private WaitTimeThread mWaitThread = null;
-	
-	
+
+	private AlertDialog mAlertFinish;
+	private AlertDialog mNextDialog ;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -120,8 +127,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
-		
-		showStartDialog();
+		if(calculating == false){
+			showDialog(START_DIALOG_ID);
+			calculating = true;
+		}
 		createExpression();
 		super.onResume();
 	}
@@ -140,6 +149,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		expressionView = (TextView)findViewById(R.id.ExpressionTextView);
 		expressionView.setText(String.format("%d×%d+%d= ",a,b,c));
 		creatAnswer = a*b+c;
+		Log.d(TAG,"Answer = " + creatAnswer);
 		/* 解答欄を空欄にする */
 		numberView = (TextView)findViewById(R.id.AnswerTextView);
 		numberView.setText(null);
@@ -149,7 +159,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 		remainingTimeView.setText(String.format("%d",time/TICK_TIME));
 	}
 	private void startCountDown(){
-		remainingTime = REMAINING_TIME;
 		mCountdownHandler.set(REMAINING_TIME);
 		setTextCountDown(REMAINING_TIME);
 		mCountdownHandler.sleep();
@@ -172,8 +181,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 					mRemainingTime-=TICK_TIME;
 					setTextCountDown(mRemainingTime);
 					if(mRemainingTime <= 0){
-						this.cancel();
-						sendSoundStopIntent();
+						sendSoundStartIntent();
 					}
 					else {
 						sleep();
@@ -181,6 +189,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 					break;
 				case MSG_CANCEL:
 					sendSoundStopIntent();
+					break;
+				case MSG_FINISH:
+					mAlertFinish.dismiss();
+					finish();
 					break;
 				default:
 					break;
@@ -193,6 +205,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 		public void cancel(){
 			this.removeMessages(MSG_COUNTDOWN);  
 			sendMessage(obtainMessage(MSG_CANCEL));
+		}
+		public void complete(){
+			this.removeMessages(MSG_COUNTDOWN);  
+			sendMessage(obtainMessage(MSG_FINISH));
 		}
 	}
 	private void setTextAnswer(int answer){
@@ -219,21 +235,21 @@ public class CalcActivity extends Activity implements OnClickListener {
 			String as = cs.toString();
 			int a = Integer.parseInt(as);
 			
+			keytouch = 0;
+			answer = 0;
 			if(a == creatAnswer){
-				showNextDialog("正解です");
+				showDialog(NEXT_CORRECT_DIALOG_ID);
 				mRepeat--;
 			}
 			else {
-				showNextDialog("間違いです");
+				showDialog(NEXT_DISTRACTER_DIALOG_ID);
 			}
-			keytouch = 0;
-			answer = 0;
+			
 			if(mRepeat <= 0){
-				showFinishDilag();
+				showDialog(FINISH_DIALOG_ID);
 			}
 		}
 		else if(i== BUTTON_CONTINUE){
-			remainingTime = REMAINING_TIME/2;
 			setTextCountDown(REMAINING_TIME/2);
 			startCountDown();
 		}	
@@ -247,16 +263,14 @@ public class CalcActivity extends Activity implements OnClickListener {
 		startService(intent);
 	}
 	private void sendSnoozeStartIntent(){
-		Long snoozeTime = new Long(mSnoozeTime);
 		Intent intent = new Intent(timerService.SNOOZE_START);
-		intent.putExtra(timerService.SNOOZE, snoozeTime);
 		startService(intent);
 	}
 	private void sendSnoozeCancelIntent(){
 		Intent intent = new Intent(timerService.SNOOZE_CANCEL);
 		startService(intent);
 	}
-	private void showStartDialog(){
+	private Dialog createStartDialog(){
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		
 		//dlg.setTitle("TEST");
@@ -266,19 +280,19 @@ public class CalcActivity extends Activity implements OnClickListener {
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				// TODO 自動生成されたメソッド・スタブ
-				
+				calculating = true; /* 計算中 */
 				sendSoundStopIntent();
 				sendSnoozeStartIntent(); /* 「やる」と言っておきながら、やらなかったら困るのでスヌーズをかけておく */
-				
 				startCountDown();
+				arg0.dismiss();
 			}
 		});
 		
-		dlg.show();
+		return dlg.create();
 		
-		calculating = true; /* 計算中 */
+		
 	}
-	private void showNextDialog(String text){
+	private Dialog createNextDialog(String text){
 		String positive_text = null;
 		sendSnoozeCancelIntent();
 		if(preview == true){
@@ -302,150 +316,60 @@ public class CalcActivity extends Activity implements OnClickListener {
 				}
 				else {
 					createExpression();
+					startCountDown();
+					dialog.dismiss();
 				}
 			}
 			
 		});
-		dlg.show();
-		startCountDown();
-		//sendSnoozeStartIntent(); /* 問題を解いたところで寝てしまったら困るからスヌーズをかける */
+		return dlg.create();
+		
+		
 	}
-	
-	private void showFinishDilag(){
+	private void finishActivity(){
+		mCountdownHandler.complete();
+	}
+	private Dialog createFinishDilog(){
 		sendSnoozeCancelIntent();
-		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
+		AlertDialog.Builder mFinishdlg = new AlertDialog.Builder(this);
 		//dlg.setTitle("TEST");
-		dlg.setMessage("おしまいです。¥n起きましたか？");
-		dlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+		mFinishdlg.setMessage("起きましたか？");
+		mFinishdlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO 自動生成されたメソッド・スタブ
-				Intent intent = new Intent(timerService.BOOT_ACTION);
+				stopCountDown();
+				Intent intent = new Intent(timerService.ACTION_FINISH);
 				startService(intent);
+				calculating = false; /* 計算終了 */
+				//finishActivity();
+				dialog.dismiss();
+				finish();
 			}
 			
 		});
-		dlg.show();
-		stopCountDown();
-		
-		calculating = false;
-	}
-	private void startWaitThread(){
-		Long wait = new Long(REMAINING_TIME);
-		mWaitThread = new WaitTimeThread();
-		mWaitThread.execute(wait);
-	}
-	/*
-	 * 入力待ちのスレッド
-	 */
-	class WaitTimeThread extends AsyncTask<Long,Void,Void> {
-		long mWait;
-		@Override
-		protected Void doInBackground(Long... params) {
-			// TODO 自動生成されたメソッド・スタブ
-			mWait = params[0].longValue();
-			while(this.isCancelled()==false || mWait >= 0){
-				mWait--;
-				try {
-					Thread.sleep(TICK_TIME);
-				} catch (InterruptedException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-					break;
-				}
-			}
-			return null;
-		}
-
-		@Override
-		protected void onCancelled() {
-			// TODO 自動生成されたメソッド・スタブ
-			sendSoundStopIntent();
-			super.onCancelled();
-		}
-
-		@Override
-		protected void onPostExecute(Void result) {
-			// TODO 自動生成されたメソッド・スタブ
-			sendSoundStartIntent();
-			super.onPostExecute(result);
-		}
-
-		@Override
-		protected void onPreExecute() {
-			// TODO 自動生成されたメソッド・スタブ
-			sendSoundStopIntent();
-			super.onPreExecute();
-		}
+		return mFinishdlg.create();
 		
 	}
-	/*
-	 * 制限時間のスレッド
-	 */
-	class timeLimit extends AsyncTask<Void,Long,Boolean> {
-		
-		public void Continue(long time){
-			synchronized(limitTime){
-				long value = limitTime.longValue();
-				value += time;
-				limitTime = new Long(value);
-			}
-			
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		// TODO 自動生成されたメソッド・スタブ
+		Dialog dlg = super.onCreateDialog(id);
+		switch(id){
+		case START_DIALOG_ID:
+			dlg = createStartDialog();
+			break;
+		case NEXT_CORRECT_DIALOG_ID:
+			dlg = createNextDialog("正解です");
+			break;
+		case NEXT_DISTRACTER_DIALOG_ID:
+			dlg = createNextDialog("間違いです");
+			break;	
+		case FINISH_DIALOG_ID:
+			dlg = createFinishDilog();
 		}
-		@Override
-		protected Boolean doInBackground(Void... arg0) {
-			// TODO 自動生成されたメソッド・スタブ
-			long value;
-			Boolean rt = new Boolean(true);
-			while(this.isCancelled() == false){
-				try {
-					Thread.sleep(TICK_TIME);
-				} catch (InterruptedException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				}
-				synchronized(limitTime){
-					value = limitTime.longValue();
-					value -= TICK_TIME;
-					limitTime = new Long(value);
-				}
-					if(value <= 0){
-						rt = false;
-						break;
-					}
-					publishProgress(new Long(value));
-				
-				
-			}
-			return rt;
-		}
-
-		@Override
-		protected void onCancelled() {
-			// TODO 自動生成されたメソッド・スタブ
-			super.onCancelled();
-		}
-
-		@Override
-		protected void onPostExecute(Boolean result) {
-			// TODO 自動生成されたメソッド・スタブ
-			super.onPostExecute(result);
-		}
-
-		@Override
-		protected void onPreExecute() {
-			// TODO 自動生成されたメソッド・スタブ
-			super.onPreExecute();
-		}
-
-		@Override
-		protected void onProgressUpdate(Long... values) {
-			// TODO 自動生成されたメソッド・スタブ
-			setTextCountDown(values[0].longValue());
-			super.onProgressUpdate(values);
-		}
-		
+		return dlg;
 	}
 
 }

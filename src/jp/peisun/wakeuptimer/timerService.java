@@ -29,17 +29,19 @@ import android.util.Log;
 public class timerService extends Service {
 	private static final String TAG = "timerService";
 	private static  boolean debug = true;
-	private final long OneMinute = 60*1000;
-	private final long INTERVAL_TIME = 24*60*60*1000;
+	
+	/* 定数 */
 	private final long THREAD_SLEEP_TIME = 1000; 
-	public static final long SNOOZE_DEFAULT_TIME = 10*60*1000; /* 10分 */
-	private static MediaPlayer player;
-	private Snooze snooze = null;
-	private int mSetHour = 0;
-	private int mSetMinute = 0;
+	public static final long SNOOZE_DEFAULT_TIME = 5*60*1000; /* 10分 */
 	
+	/* アラーム音 */
+	private MediaPlayer player;
+
+	/* ファイル名 */
 	public static final String  FILE_SETTIME = "setTime";
-	
+	/*
+	 * インテント
+	 */
 	public static final String ACTION_WAKEUP = "jp.peisun.wakeupTimer.intent.wakeup";
 	public static final String INTENT_SETTIME = "jp.peisun.wakeupTimer.intent.setTime";
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
@@ -47,17 +49,42 @@ public class timerService extends Service {
 	public static final String SNOOZE_START = "jp.peisun.wakeupTimer.intent.snoozeStart";
 	public static final String SNOOZE_CANCEL = "jp.peisun.wakeupTimer.intent.snoozeCancel";
 	public static final String BOOT_ACTION = "jp.peisun.wakeupTimer.intent.boot_completed";
+	public static final String ACTION_FINISH = "jp.peisun.wakeupTimer.intent.finish";
 	
+	/*
+	 * インテント引数
+	 */
 	public static final String SET_HOUR = "setHour";
 	public static final String SET_MINUTE = "setMinute"; 
 	public static final String SNOOZE = "snooze";
+	
+	/*
+	 * Alarmを再設定するまでの時間稼ぎ
+	 */
+	private static final long DELAY_TIME = 60*1000; // 60秒
+	private static final int MSG = 1;
+	private WaitHandler mWaitHandler = new WaitHandler();
+	
+	
+	private int mSetHour = 0;
+	private int mSetMinute = 0;
+	
+	/*
+	 * 起床時間のアラーム関連
+	 */
 	private  AlarmManager mAmWakeup = null;
 	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
 	
-	
-	private long mSnoozTime = SNOOZE_DEFAULT_TIME;
+	/*
+	 * スヌーズのアラーム関連
+	 */
+	private volatile long mSnoozTime = SNOOZE_DEFAULT_TIME;
+	private AlarmManager mAmSnooze = null;
+	private PendingIntent mSnoozSender = null;
 	private Snooze mSnoozeThread = null;
+	
+	/* 画面ロック解除 */
 	private PowerManager.WakeLock mWakeLock;
 	private KeyguardLock keylock;
 	
@@ -108,8 +135,14 @@ public class timerService extends Service {
 		/* 起床時間の設定 */
 		else if(Action.equals(INTENT_SETTIME)){
 			Log.d(TAG,"intent:"+INTENT_SETTIME);
-			mSetHour = intent.getIntExtra(SET_HOUR, 6);
-			mSetMinute = intent.getIntExtra(SET_MINUTE, 30);
+			int hour = intent.getIntExtra(SET_HOUR, mSetHour);
+			int minute = intent.getIntExtra(SET_MINUTE, mSetMinute);
+			if(hour != mSetHour){
+				mSetHour = hour;
+			}
+			if(minute != mSetMinute){
+				mSetMinute = minute;
+			}
 			alarmSetTime(mSetHour,mSetMinute);
 						
 		}
@@ -119,7 +152,11 @@ public class timerService extends Service {
 			Log.d(TAG,"intent:"+SOUND_PALY);
 			soundPlay();
 		}
-		
+		/* アラームの停止 */
+		else if(Action.equals(SOUND_STOP)){
+			Log.d(TAG,"intent:"+SOUND_STOP);
+			soundStop();
+		}
 		/* スヌーズの開始 */
 		else if(Action.equals(SNOOZE_START)){
 			Log.d(TAG,"intent:"+SNOOZE_START);
@@ -127,11 +164,7 @@ public class timerService extends Service {
 			mSnoozTime = intent.getLongExtra(SNOOZE, SNOOZE_DEFAULT_TIME);
 			startSnooze(mSnoozTime);
 		}
-		/* アラームの停止 */
-		else if(Action.equals(SOUND_STOP)){
-			Log.d(TAG,"intent:"+SOUND_STOP);
-			soundStop();
-		}
+		
 		/* スヌーズのキャンセル */
 		else if(Action.equals(SNOOZE_CANCEL)){
 			Log.d(TAG,"intent:"+SNOOZE_CANCEL);
@@ -140,19 +173,26 @@ public class timerService extends Service {
 		}
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
-			returnFromSleep(); /* 画面ロックを外す */
-			mAmWakeup.cancel(PendingIntent.getService(this,0, wakeup_intent, 0));
+			// 画面ロックを外す
+			returnFromSleep();
+			// アラームのキャンセル
+			alarmSetCancel();
+			
 			// アラームの鳴動
 			soundPlay();
 			
 			// CalcActivityを呼び出す
-			Intent ia = new Intent(timerService.this,CalcActivity.class);
+			//Intent ia = new Intent(timerService.this,CalcActivity.class);
+			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
 			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
 			ia.putExtra(CalcActivity.PREVIEW, false);
 			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(ia);
 			
 			
+		}
+		else if(Action.equals(ACTION_FINISH)){
+			mWaitHandler.sleep();
 		}
 		return START_STICKY;
 		// super.onStartCommand(intent, flags, startId);
@@ -218,6 +258,10 @@ public class timerService extends Service {
 			calendar.set(Calendar.HOUR_OF_DAY, hour);
 			calendar.set(Calendar.MINUTE, minute+1);
 			calendar.set(Calendar.SECOND, 0);
+			if(calendar.getTimeInMillis() <= currentTime){
+				calendar.add(Calendar.DATE,1);
+			}
+			
 		}
 		
 		Log.d(TAG,"setTime:"+calendar.get(Calendar.HOUR_OF_DAY)+":"+calendar.get(Calendar.MINUTE));
@@ -226,48 +270,53 @@ public class timerService extends Service {
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),mAlarmSender);
 
 	}
-
+	private void alarmSetCancel(){
+		mAmWakeup.cancel(mAlarmSender);
+	}
 
 	private void soundPlay(){
-		if(player == null){
+		if(player != null){
+			soundReplay();
+		}
+		else {
 			player = new MediaPlayer();
-		}
-		//アラーム音として設定
-		player.setAudioStreamType(AudioManager.STREAM_ALARM);
-		//音源を指定
-		try {
-			player.setDataSource(this,Settings.System.DEFAULT_NOTIFICATION_URI);
-		} catch (IllegalArgumentException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		} catch (IllegalStateException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
 
-		//繰り返し再生するように指定
-		player.setLooping(true);
-		//
-		try {
-			player.prepare();
-		} catch (IllegalStateException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
-		//最初に巻き戻し
-		player.seekTo(0);
-		//再生開始
-		player.start();
+			//アラーム音として設定
+			player.setAudioStreamType(AudioManager.STREAM_ALARM);
+			//音源を指定
+			try {
+				player.setDataSource(this,Settings.System.DEFAULT_NOTIFICATION_URI);
+			} catch (IllegalArgumentException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (IllegalStateException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			}
 
+			//繰り返し再生するように指定
+			player.setLooping(true);
+			//
+			try {
+				player.prepare();
+			} catch (IllegalStateException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			}
+			//最初に巻き戻し
+			player.seekTo(0);
+			//再生開始
+			player.start();
+		}
 	}
 	private void soundReplay(){
 		if(player == null){
@@ -283,21 +332,41 @@ public class timerService extends Service {
 	private void soundStop(){
 		if(player != null){
 			player.stop();
+			player.release();
+			player = null;
 		}
 	}
-	
+	class WaitHandler extends Handler {
+		@Override
+        public void handleMessage(Message msg) {
+			alarmSetTime(mSetHour,mSetMinute);
+		}
+		public void sleep(){
+			this.removeMessages(MSG);  
+			sendMessageDelayed(obtainMessage(MSG), DELAY_TIME); 
+		}
+	}
 	/*
-	 * スヌーズ用のスレッド
+	 * スヌーズの為のAlarmをセット
 	 */
 	private void startSnooze(long snooze_time){
-		Long t = new Long(snooze_time);
-		mSnoozeThread = new Snooze();
-		mSnoozeThread.execute(t);
+		 
+		long snooze = System.currentTimeMillis() + mSnoozTime;
+
+		Log.d(TAG,"Snooze Set");
+		mSnoozSender = PendingIntent.getService(this,0, wakeup_intent, 0);
+		mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
+		mAmSnooze.set(AlarmManager.RTC_WAKEUP,snooze,mSnoozSender);
+		
+//		Long t = new Long(snooze_time);
+//		mSnoozeThread = new Snooze();
+//		mSnoozeThread.execute(t);
 	}
 	private void cancelSnooze(){
-		if(mSnoozeThread != null){
-			mSnoozeThread.cancel(true);
-		}
+		mAmSnooze.cancel(mSnoozSender);
+//		if(mSnoozeThread != null){
+//			mSnoozeThread.cancel(true);
+//		}
 	}
 	class Snooze extends AsyncTask<Long,Void,Boolean> {
 		long alarmTime = 0;

@@ -19,7 +19,7 @@
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="スヌーズ解除まで後"
+                android:text="タイムアップまで後"
                 android:textAppearance="?android:attr/textAppearanceMedium" android:padding="5dp" android:layout_weight="1"/>
 
             <TextView
@@ -191,7 +191,7 @@
                 android:id="@+id/buttonContinue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="10秒延長" android:layout_weight="1"/>
+                android:text="制限時間延長" android:layout_weight="1"/>
 
             <Button
                 android:id="@+id/buttonEnter"
