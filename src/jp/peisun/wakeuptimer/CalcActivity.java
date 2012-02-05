@@ -27,12 +27,14 @@ import java.util.*;
 public class CalcActivity extends Activity implements OnClickListener {
 	private final String TAG = "CalcActivity";
 	private boolean preview = false;
+	public static final String REPEAT = "repeat";
 	public static final String PREVIEW = "preview";
+	public static final String LIMITTIME = "limittime";
+	
 	private static final String POSITIVE_PREVIEW = "プレビューを終わります";
 	private static final String POSITIVE_NEXT = "次です";
 	private static final int TICK_TIME = 1000;
-	private static final int REMAINING_TIME = 60*1000;
-	private static final int DEFAULT_REPEAT = 1;
+	
 	private static final int MSG_COUNTDOWN = 1;
 	private static final int MSG_CANCEL = 2;
 	private static final int MSG_FINISH = 3;
@@ -59,8 +61,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private int keytouch = 0;
 	private int answer = 0;
 	private int creatAnswer = 0;
-	private int mRepeat = DEFAULT_REPEAT;
-	
+	private int mRepeat = 0;
+	private long mLimitTime = 0;
 
 	private AlertDialog mAlertFinish;
 	private AlertDialog mNextDialog ;
@@ -69,9 +71,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.calclayout);
+		mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
+		mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
 		Bundle extras=getIntent().getExtras();
 		if(extras != null){
 			preview = extras.getBoolean(PREVIEW);
+			mRepeat = extras.getInt(REPEAT, mRepeat);
+			mLimitTime = extras.getLong(LIMITTIME,mLimitTime);
+			if(mRepeat <= 0){
+				long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
+				Random r = new Random(seed);
+				mRepeat = Math.abs(r.nextInt()%20);
+			}
 		}
 		/* ボタンの生成 */
 		button0 = (Button)findViewById(R.id.button0);
@@ -159,8 +170,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 		remainingTimeView.setText(String.format("%d",time/TICK_TIME));
 	}
 	private void startCountDown(){
-		mCountdownHandler.set(REMAINING_TIME);
-		setTextCountDown(REMAINING_TIME);
+		mCountdownHandler.set(mLimitTime);
+		setTextCountDown(mLimitTime);
 		mCountdownHandler.sleep();
 	}
 	private void stopCountDown(){
@@ -250,7 +261,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			}
 		}
 		else if(i== BUTTON_CONTINUE){
-			setTextCountDown(REMAINING_TIME/2);
+			setTextCountDown(mLimitTime/2);
 			startCountDown();
 		}	
 	}

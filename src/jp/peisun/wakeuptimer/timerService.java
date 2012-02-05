@@ -22,6 +22,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -34,9 +35,7 @@ public class timerService extends Service {
 	private final long THREAD_SLEEP_TIME = 1000; 
 	public static final long SNOOZE_DEFAULT_TIME = 5*60*1000; /* 10分 */
 	
-	/* アラーム音 */
-	private MediaPlayer player;
-
+	
 	/* ファイル名 */
 	public static final String  FILE_SETTIME = "setTime";
 	/*
@@ -46,10 +45,15 @@ public class timerService extends Service {
 	public static final String INTENT_SETTIME = "jp.peisun.wakeupTimer.intent.setTime";
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
 	public static final String SOUND_STOP = "jp.peisun.wakeupTimer.intent.soundStop";
+	public static final String SOUND_SET = "jp.peisun.wakeupTimer.intent.soundSet";
 	public static final String SNOOZE_START = "jp.peisun.wakeupTimer.intent.snoozeStart";
 	public static final String SNOOZE_CANCEL = "jp.peisun.wakeupTimer.intent.snoozeCancel";
+	public static final String SNOOZE_TIME = "jp.peisun.wakeupTimer.intent.snoozeTime";
+	public static final String VIBRATION_SET = "jp.peisun.wakeupTimer.intent.vibration";
 	public static final String BOOT_ACTION = "jp.peisun.wakeupTimer.intent.boot_completed";
 	public static final String ACTION_FINISH = "jp.peisun.wakeupTimer.intent.finish";
+	public static final String SET_CACLREPEAT = "jp.peisun.wakeupTimer.intent.calcRepeat";
+	public static final String SET_LIMITTIME = "jp.peisun.wakeupTimer.intent.limitime";
 	
 	/*
 	 * インテント引数
@@ -57,6 +61,8 @@ public class timerService extends Service {
 	public static final String SET_HOUR = "setHour";
 	public static final String SET_MINUTE = "setMinute"; 
 	public static final String SNOOZE = "snooze";
+	public static final String SOUND = "sound";
+	public static final String VIBRATION = "vibration";
 	
 	/*
 	 * Alarmを再設定するまでの時間稼ぎ
@@ -72,9 +78,17 @@ public class timerService extends Service {
 	/*
 	 * 起床時間のアラーム関連
 	 */
-	private  AlarmManager mAmWakeup = null;
+	private volatile boolean mAlarm = true;
+	private volatile boolean mVabration = true;
+	private AlarmManager mAmWakeup = null;
 	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
+	/* アラーム音 */
+	private MediaPlayer player;
+	/* バイブレーション */
+	private Vibrator vibrator=null;
+	// 0秒後に3秒振動、1秒待って3秒振動、1秒待って3秒振動...
+	private final long[] pattern = {0,3000, 1000, 3000, 1000, 3000, 1000}; // OFF/ON/OFF/ON/OFF...
 	
 	/*
 	 * スヌーズのアラーム関連
@@ -88,6 +102,10 @@ public class timerService extends Service {
 	private PowerManager.WakeLock mWakeLock;
 	private KeyguardLock keylock;
 	
+	/* 計算回数　*/
+	private int mRepeat = 0;
+	// 制限時間
+	private long mLimitime = 0;
 
 	@Override
 	public IBinder onBind(Intent arg0) {
@@ -100,7 +118,11 @@ public class timerService extends Service {
 		// TODO 自動生成されたメソッド・スタブ
 		//am = (AlarmManager)getSystemService(ALARM_SERVICE);
 		//mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
-        
+        mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
+        mLimitime = Long.parseLong(getString(R.string.limittimeDefault));
+        mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
+        mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
+        mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
 		super.onCreate();
 	}
 	@Override
@@ -123,6 +145,12 @@ public class timerService extends Service {
 		if(Action.equals(BOOT_ACTION)){
 			Log.d(TAG,"intent:"+BOOT_ACTION);
 			try {
+				/* 一度はデフォルト値を設定する */
+				mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
+				mLimitime = Long.parseLong(getString(R.string.limittimeDefault));
+				mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
+				
+				// ファイルから起床時間を読み出し設定する
 				int[] time = readSetTimeFile();
 				mSetHour = time[0];
 				mSetMinute = time[1];
@@ -146,16 +174,32 @@ public class timerService extends Service {
 			alarmSetTime(mSetHour,mSetMinute);
 						
 		}
-		
+		/* アラームを鳴らすかどうか */
+		else if(Action.equals(SOUND_SET)){
+			mAlarm = intent.getBooleanExtra(SOUND, mAlarm);
+			Log.d(TAG,"intent:"+SOUND_SET+" "+ mAlarm);
+		}
 		/* アラームの鳴動 */
 		else if(Action.equals(SOUND_PALY)){
 			Log.d(TAG,"intent:"+SOUND_PALY);
 			soundPlay();
+			vabrationStart();
 		}
 		/* アラームの停止 */
 		else if(Action.equals(SOUND_STOP)){
 			Log.d(TAG,"intent:"+SOUND_STOP);
 			soundStop();
+			vavrationStop();
+		}
+		/* アラームを鳴らすかどうか */
+		else if(Action.equals(VIBRATION_SET)){
+			mVabration = intent.getBooleanExtra(VIBRATION, mVabration);
+			Log.d(TAG,"intent:"+VIBRATION_SET+" "+ mVabration);
+		}
+		/* スヌーズ時間の設定 */
+		else if(Action.equals(SNOOZE_TIME)){
+			mSnoozTime = intent.getLongExtra(SNOOZE, SNOOZE_DEFAULT_TIME);
+			Log.d(TAG,"intent:"+SNOOZE_TIME+" "+ mSnoozTime);
 		}
 		/* スヌーズの開始 */
 		else if(Action.equals(SNOOZE_START)){
@@ -171,6 +215,14 @@ public class timerService extends Service {
 			releaseWakelock();
 			cancelSnooze();
 		}
+		/* 設問数の設定 */
+		else if(Action.equals(SET_CACLREPEAT)){
+			mRepeat = intent.getIntExtra(CalcActivity.REPEAT, mRepeat);
+		}
+		/* 制限時間の設定 */
+		else if(Action.equals(SET_LIMITTIME)){
+			mLimitime = intent.getLongExtra(CalcActivity.LIMITTIME, mLimitime);
+		}
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
 			// 画面ロックを外す
@@ -180,12 +232,15 @@ public class timerService extends Service {
 			
 			// アラームの鳴動
 			soundPlay();
+			vabrationStart();
 			
 			// CalcActivityを呼び出す
 			//Intent ia = new Intent(timerService.this,CalcActivity.class);
 			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
 			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
 			ia.putExtra(CalcActivity.PREVIEW, false);
+    		intent.putExtra(CalcActivity.REPEAT, mRepeat);
+    		intent.putExtra(CalcActivity.LIMITTIME, mLimitime);
 			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(ia);
 			
@@ -275,6 +330,7 @@ public class timerService extends Service {
 	}
 
 	private void soundPlay(){
+		if(mAlarm){
 		if(player != null){
 			soundReplay();
 		}
@@ -317,6 +373,7 @@ public class timerService extends Service {
 			//再生開始
 			player.start();
 		}
+		}
 	}
 	private void soundReplay(){
 		if(player == null){
@@ -334,6 +391,19 @@ public class timerService extends Service {
 			player.stop();
 			player.release();
 			player = null;
+		}
+	}
+	private void vabrationStart(){
+		if(mVabration){
+			if(vibrator == null){
+				vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);	
+			}
+			vibrator.vibrate(pattern, 0);
+		}
+	}
+	private void vavrationStop(){
+		if(vibrator != null){
+			vibrator.cancel();
 		}
 	}
 	class WaitHandler extends Handler {
@@ -395,6 +465,7 @@ public class timerService extends Service {
 				Intent intent = new Intent(ACTION_WAKEUP);
 				startService(intent);
 				soundPlay();
+				vabrationStart();
 			}
 			super.onPostExecute(result);
 		}
