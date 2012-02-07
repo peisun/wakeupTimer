@@ -71,19 +71,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.calclayout);
-		mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
-		mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
-		Bundle extras=getIntent().getExtras();
-		if(extras != null){
-			preview = extras.getBoolean(PREVIEW);
-			mRepeat = extras.getInt(REPEAT, mRepeat);
-			mLimitTime = extras.getLong(LIMITTIME,mLimitTime);
-			if(mRepeat <= 0){
-				long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
-				Random r = new Random(seed);
-				mRepeat = Math.abs(r.nextInt()%20);
-			}
-		}
+		
 		/* ボタンの生成 */
 		button0 = (Button)findViewById(R.id.button0);
 		button0.setOnClickListener(this);
@@ -134,10 +122,30 @@ public class CalcActivity extends Activity implements OnClickListener {
 		numberView.setText(null);
 		/* 計算式のTextView取得 */
 		expressionView = (TextView)findViewById(R.id.ExpressionTextView);
+		
+		Bundle extras=getIntent().getExtras();
+		if(extras != null){
+			preview = extras.getBoolean(PREVIEW);
+//			mRepeat = extras.getInt(REPEAT, Integer.parseInt(getString(R.string.calcRepeatDefault)));
+//			mLimitTime = extras.getLong(LIMITTIME,Long.parseLong(getString(R.string.limittimeDefault)));
+			mRepeat = extras.getInt(REPEAT);
+			mLimitTime = extras.getLong(LIMITTIME);
+			Log.d(TAG,"preview "+ preview);
+			Log.d(TAG,"mRepeat " + mRepeat);
+			Log.d(TAG,"mLimitTIme "+ mLimitTime);
+			
+			if(mRepeat <= 0){
+				long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
+				Random r = new Random(seed);
+				mRepeat = Math.abs(r.nextInt()%20);
+			}
+			setTextCountDown(mLimitTime);
+		}
 	}
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
+		
 		if(calculating == false){
 			showDialog(START_DIALOG_ID);
 			calculating = true;
@@ -149,6 +157,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	protected void onPause() {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onPause();
+		Log.d(TAG,"onPause");
 	}
 	
 	private void createExpression(){
@@ -169,6 +178,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private void setTextCountDown(long time){
 		remainingTimeView.setText(String.format("%d",time/TICK_TIME));
 	}
+	private long getCount(){
+		return mCountdownHandler.get();
+	}
 	private void startCountDown(){
 		mCountdownHandler.set(mLimitTime);
 		setTextCountDown(mLimitTime);
@@ -177,13 +189,14 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private void stopCountDown(){
 		mCountdownHandler.cancel();
 	}
+	// このHandlerは、activityがバックグランドに遷移しても生きている模様
 	class CountdownHandler extends Handler {
-		long mRemainingTime = 0;
+		private volatile long mRemainingTime = 0;
 		public void set(long time){
 			mRemainingTime = time;
 		}
-		public void add(long time){
-			mRemainingTime += time;
+		public long get(){
+			return mRemainingTime;
 		}
 		@Override
         public void handleMessage(Message msg) {
@@ -244,13 +257,21 @@ public class CalcActivity extends Activity implements OnClickListener {
 		else if(i== BUTTON_ENTER){
 			CharSequence cs = numberView.getText();
 			String as = cs.toString();
-			int a = Integer.parseInt(as);
+			int a;
+			if(as.length()> 0){
+				a = Integer.parseInt(as);
+			}
+			else {
+				a = -1;
+			}
 			
 			keytouch = 0;
 			answer = 0;
 			if(a == creatAnswer){
-				showDialog(NEXT_CORRECT_DIALOG_ID);
+				stopCountDown();
 				mRepeat--;
+				showDialog(NEXT_CORRECT_DIALOG_ID);
+				
 			}
 			else {
 				showDialog(NEXT_DISTRACTER_DIALOG_ID);
@@ -261,7 +282,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 			}
 		}
 		else if(i== BUTTON_CONTINUE){
-			setTextCountDown(mLimitTime/2);
+			long l = getCount();
+			if(l < mLimitTime/2){
+				mLimitTime = l + mLimitTime/2;
+			}
+			sendSoundStopIntent();
+			stopCountDown();
 			startCountDown();
 		}	
 	}
@@ -273,6 +299,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 		Intent intent = new Intent(timerService.SOUND_STOP);
 		startService(intent);
 	}
+	// ここで言うスヌーズは計算を拒否したことを考えている
+	// よって、他のActivityに移行する場合を以下と考えている
+	// 1.backキーを押される
+	// 2.homeキーを押される
+	// 3.他のアプリケーションによるバックグランドに遷移する場合
+	// これらの場合は、スヌーズをかけて、Activityをfinish()する
 	private void sendSnoozeStartIntent(){
 		Intent intent = new Intent(timerService.SNOOZE_START);
 		startService(intent);
@@ -292,8 +324,13 @@ public class CalcActivity extends Activity implements OnClickListener {
 			public void onClick(DialogInterface arg0, int arg1) {
 				// TODO 自動生成されたメソッド・スタブ
 				calculating = true; /* 計算中 */
-				sendSoundStopIntent();
-				sendSnoozeStartIntent(); /* 「やる」と言っておきながら、やらなかったら困るのでスヌーズをかけておく */
+				
+				if(preview == false){
+					sendSoundStopIntent();
+					// 「やる」と言っておきながら、やらないで放っておく場合は
+					// カウントダウンでアラームがなるので
+					// スヌーズをかける必要はない
+				}
 				startCountDown();
 				arg0.dismiss();
 			}
@@ -306,6 +343,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private Dialog createNextDialog(String text){
 		String positive_text = null;
 		sendSnoozeCancelIntent();
+		
 		if(preview == true){
 			positive_text = POSITIVE_PREVIEW;
 		}
@@ -351,8 +389,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO 自動生成されたメソッド・スタブ
 				stopCountDown();
-				Intent intent = new Intent(timerService.ACTION_FINISH);
-				startService(intent);
+				if(preview == false){
+					Intent intent = new Intent(timerService.ACTION_FINISH);
+					startService(intent);
+				}
 				calculating = false; /* 計算終了 */
 				//finishActivity();
 				dialog.dismiss();
@@ -381,6 +421,36 @@ public class CalcActivity extends Activity implements OnClickListener {
 			dlg = createFinishDilog();
 		}
 		return dlg;
+	}
+	@Override
+	public void onBackPressed() {
+		// TODO 自動生成されたメソッド・スタブ
+		// Backキーが押されたらActivityは死ぬ
+		// 計算を拒否したことになり、スヌーズをかける
+		//if(!preview){
+			stopCountDown();	
+			sendSnoozeStartIntent();
+		//}
+		finish();
+		super.onBackPressed();
+	}
+	@Override
+	protected void onUserLeaveHint() {
+		// TODO 自動生成されたメソッド・スタブ
+		// Activityが他のアプリにより、バックグランドに入ろうとする
+		// この場合も計算を拒否したこととなり、スヌーズをかける
+		//if(!preview){
+			stopCountDown();
+			sendSnoozeStartIntent();
+		//}
+		finish();
+		super.onUserLeaveHint();
+	}
+	@Override
+	protected void onDestroy() {
+		// TODO 自動生成されたメソッド・スタブ
+		Log.d(TAG,"onDestory");
+		super.onDestroy();
 	}
 
 }

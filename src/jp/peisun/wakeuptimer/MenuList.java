@@ -16,7 +16,6 @@ public class MenuList {
 	private int mType;
 	private String mDetails;
 	private boolean mCheck;
-	public Method mInvoke;
 	public String getMenuText(){ return mMenuText; }
 	public String getMenuValue(){ return mMenuValue; }
 	public int getMenuType(){ return mType; }

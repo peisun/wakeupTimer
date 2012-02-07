@@ -4,9 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 
-import android.content.Context;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.util.Log;
 
 
@@ -24,6 +25,13 @@ public class wakeupReceiver extends BroadcastReceiver {
 			Intent i = new Intent(timerService.BOOT_ACTION);
 			mContext.startService(i);
 			
+		}
+		else if(action.equals(AudioManager.RINGER_MODE_CHANGED_ACTION)){
+			if (intent.getIntExtra(AudioManager.EXTRA_RINGER_MODE, -1) == AudioManager.RINGER_MODE_VIBRATE) {
+                // マナーモード
+            } else {
+                // マナーモードではない
+            }
 		}
 		
 		return;

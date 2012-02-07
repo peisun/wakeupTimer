@@ -2,11 +2,17 @@ package jp.peisun.wakeuptimer;
 
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
@@ -16,15 +22,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
+
 
 
 public class timerService extends Service {
@@ -32,9 +37,6 @@ public class timerService extends Service {
 	private static  boolean debug = true;
 	
 	/* 定数 */
-	private final long THREAD_SLEEP_TIME = 1000; 
-	public static final long SNOOZE_DEFAULT_TIME = 5*60*1000; /* 10分 */
-	
 	
 	/* ファイル名 */
 	public static final String  FILE_SETTIME = "setTime";
@@ -42,18 +44,15 @@ public class timerService extends Service {
 	 * インテント
 	 */
 	public static final String ACTION_WAKEUP = "jp.peisun.wakeupTimer.intent.wakeup";
-	public static final String INTENT_SETTIME = "jp.peisun.wakeupTimer.intent.setTime";
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
 	public static final String SOUND_STOP = "jp.peisun.wakeupTimer.intent.soundStop";
 	public static final String SOUND_SET = "jp.peisun.wakeupTimer.intent.soundSet";
 	public static final String SNOOZE_START = "jp.peisun.wakeupTimer.intent.snoozeStart";
 	public static final String SNOOZE_CANCEL = "jp.peisun.wakeupTimer.intent.snoozeCancel";
-	public static final String SNOOZE_TIME = "jp.peisun.wakeupTimer.intent.snoozeTime";
-	public static final String VIBRATION_SET = "jp.peisun.wakeupTimer.intent.vibration";
 	public static final String BOOT_ACTION = "jp.peisun.wakeupTimer.intent.boot_completed";
 	public static final String ACTION_FINISH = "jp.peisun.wakeupTimer.intent.finish";
-	public static final String SET_CACLREPEAT = "jp.peisun.wakeupTimer.intent.calcRepeat";
-	public static final String SET_LIMITTIME = "jp.peisun.wakeupTimer.intent.limitime";
+	public static final String SET_CONFIG = "jp.peisun.wakeupTimer.intent.setconfig";
+	public static final String FORCE_FINISH = "jp.peisun.wakeupTimer.intent.force";
 	
 	/*
 	 * インテント引数
@@ -71,15 +70,12 @@ public class timerService extends Service {
 	private static final int MSG = 1;
 	private WaitHandler mWaitHandler = new WaitHandler();
 	
+	private ConfigData mConfig = new ConfigData();
 	
-	private int mSetHour = 0;
-	private int mSetMinute = 0;
 	
 	/*
 	 * 起床時間のアラーム関連
 	 */
-	private volatile boolean mAlarm = true;
-	private volatile boolean mVabration = true;
 	private AlarmManager mAmWakeup = null;
 	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
@@ -93,20 +89,17 @@ public class timerService extends Service {
 	/*
 	 * スヌーズのアラーム関連
 	 */
-	private volatile long mSnoozTime = SNOOZE_DEFAULT_TIME;
 	private AlarmManager mAmSnooze = null;
 	private PendingIntent mSnoozSender = null;
-	private Snooze mSnoozeThread = null;
 	
 	/* 画面ロック解除 */
 	private PowerManager.WakeLock mWakeLock;
 	private KeyguardLock keylock;
 	
-	/* 計算回数　*/
-	private int mRepeat = 0;
-	// 制限時間
-	private long mLimitime = 0;
-
+	/*
+	 * Activityの状態
+	 */
+	private boolean mActivityStarted = false;
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -118,11 +111,7 @@ public class timerService extends Service {
 		// TODO 自動生成されたメソッド・スタブ
 		//am = (AlarmManager)getSystemService(ALARM_SERVICE);
 		//mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
-        mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
-        mLimitime = Long.parseLong(getString(R.string.limittimeDefault));
-        mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
-        mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
-        mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
+		
 		super.onCreate();
 	}
 	@Override
@@ -144,41 +133,57 @@ public class timerService extends Service {
 		/* Boot時の設定 */
 		if(Action.equals(BOOT_ACTION)){
 			Log.d(TAG,"intent:"+BOOT_ACTION);
-			try {
-				/* 一度はデフォルト値を設定する */
-				mRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
-				mLimitime = Long.parseLong(getString(R.string.limittimeDefault));
-				mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
 				
+				InputStream is=null;
 				// ファイルから起床時間を読み出し設定する
-				int[] time = readSetTimeFile();
-				mSetHour = time[0];
-				mSetMinute = time[1];
-				alarmSetTime(mSetHour,mSetMinute);
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
+
+				String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;
+				File file = new File(filepath);
+				try {
+					is = new FileInputStream(file);
+					mConfig = FileConfig.readConfig(is);
+				} catch (FileNotFoundException e) {
+					// TODO 自動生成された catch ブロック
+					mConfig = setConfigDefault();
+
+				}
+				
+				try {
+					if(is != null ){
+						is.close();
+					}
+				} catch (IOException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				}
+
+				alarmSetTime(mConfig.hour,mConfig.minute);
 		}
-		/* 起床時間の設定 */
-		else if(Action.equals(INTENT_SETTIME)){
-			Log.d(TAG,"intent:"+INTENT_SETTIME);
-			int hour = intent.getIntExtra(SET_HOUR, mSetHour);
-			int minute = intent.getIntExtra(SET_MINUTE, mSetMinute);
-			if(hour != mSetHour){
-				mSetHour = hour;
+		else if(Action.equals(SET_CONFIG)){
+
+			mConfig.mSnoozTime = intent.getLongExtra(SNOOZE, mConfig.mSnoozTime);
+			mConfig.mCalcRepeat = intent.getIntExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
+			mConfig.mLimitTime = intent.getLongExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
+			mConfig.mAlarm = intent.getBooleanExtra(SOUND, mConfig.mAlarm);
+			mConfig.mVabration = intent.getBooleanExtra(VIBRATION, mConfig.mVabration);
+			int hour = intent.getIntExtra(SET_HOUR, mConfig.hour);
+			int minute = intent.getIntExtra(SET_MINUTE, mConfig.minute);
+			if(hour != mConfig.hour){
+				mConfig.hour = hour;
 			}
-			if(minute != mSetMinute){
-				mSetMinute = minute;
+			if(minute != mConfig.minute){
+				mConfig.minute = minute;
 			}
-			alarmSetTime(mSetHour,mSetMinute);
-						
+			alarmSetTime(mConfig.hour,mConfig.minute);
+			writeFile(mConfig);
+			Log.d(TAG,"intent:"+SET_CONFIG+" time= "+mConfig.hour+":"+mConfig.minute);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mSnoozTime= "+mConfig.mSnoozTime);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mVabration= "+mConfig.mVabration);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mAlarm= "+mConfig.mAlarm);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mRepeat= "+mConfig.mCalcRepeat);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mLimittime= "+mConfig.mLimitTime);
 		}
-		/* アラームを鳴らすかどうか */
-		else if(Action.equals(SOUND_SET)){
-			mAlarm = intent.getBooleanExtra(SOUND, mAlarm);
-			Log.d(TAG,"intent:"+SOUND_SET+" "+ mAlarm);
-		}
+
 		/* アラームの鳴動 */
 		else if(Action.equals(SOUND_PALY)){
 			Log.d(TAG,"intent:"+SOUND_PALY);
@@ -191,22 +196,12 @@ public class timerService extends Service {
 			soundStop();
 			vavrationStop();
 		}
-		/* アラームを鳴らすかどうか */
-		else if(Action.equals(VIBRATION_SET)){
-			mVabration = intent.getBooleanExtra(VIBRATION, mVabration);
-			Log.d(TAG,"intent:"+VIBRATION_SET+" "+ mVabration);
-		}
-		/* スヌーズ時間の設定 */
-		else if(Action.equals(SNOOZE_TIME)){
-			mSnoozTime = intent.getLongExtra(SNOOZE, SNOOZE_DEFAULT_TIME);
-			Log.d(TAG,"intent:"+SNOOZE_TIME+" "+ mSnoozTime);
-		}
+
 		/* スヌーズの開始 */
 		else if(Action.equals(SNOOZE_START)){
 			Log.d(TAG,"intent:"+SNOOZE_START);
 			releaseWakelock();
-			mSnoozTime = intent.getLongExtra(SNOOZE, SNOOZE_DEFAULT_TIME);
-			startSnooze(mSnoozTime);
+			startSnooze(mConfig.mSnoozTime);
 		}
 		
 		/* スヌーズのキャンセル */
@@ -215,14 +210,7 @@ public class timerService extends Service {
 			releaseWakelock();
 			cancelSnooze();
 		}
-		/* 設問数の設定 */
-		else if(Action.equals(SET_CACLREPEAT)){
-			mRepeat = intent.getIntExtra(CalcActivity.REPEAT, mRepeat);
-		}
-		/* 制限時間の設定 */
-		else if(Action.equals(SET_LIMITTIME)){
-			mLimitime = intent.getLongExtra(CalcActivity.LIMITTIME, mLimitime);
-		}
+
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
 			// 画面ロックを外す
@@ -235,12 +223,13 @@ public class timerService extends Service {
 			vabrationStart();
 			
 			// CalcActivityを呼び出す
-			//Intent ia = new Intent(timerService.this,CalcActivity.class);
+			// Activityをすでに起動してたら、新たには起動しない
 			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
 			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
 			ia.putExtra(CalcActivity.PREVIEW, false);
-    		intent.putExtra(CalcActivity.REPEAT, mRepeat);
-    		intent.putExtra(CalcActivity.LIMITTIME, mLimitime);
+    		ia.putExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
+    		ia.putExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
+    		Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
 			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(ia);
 			
@@ -248,9 +237,45 @@ public class timerService extends Service {
 		}
 		else if(Action.equals(ACTION_FINISH)){
 			mWaitHandler.sleep();
+			cancelSnooze();
+			mActivityStarted = false;
+		}
+		else if(Action.equals(FORCE_FINISH)){
+			soundStop();
+			vavrationStop();
+			cancelSnooze();
 		}
 		return START_STICKY;
 		// super.onStartCommand(intent, flags, startId);
+	}
+	
+	private ConfigData setConfigDefault(){
+		ConfigData config = new ConfigData();
+		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
+		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
+		config.mCalcRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
+		config.mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
+		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
+		config.mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
+		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
+		return config;
+	}
+	private void writeFile(ConfigData config){
+		OutputStream os = null;
+		try {
+			String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
+			File file = new File(filepath);
+			os = new FileOutputStream(file);
+			//os = openFileOutput(FileConfig.xmlfile,MODE_PRIVATE);
+			FileConfig.writeConfig(os,config);
+			os.close();
+		} catch (FileNotFoundException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
 	}
 	private void returnFromSleep(){
 		// PowerManagerを取得する
@@ -277,21 +302,7 @@ public class timerService extends Service {
 		}
 		
 	}
-	private int[] readSetTimeFile() throws Exception {
-    	InputStream in = openFileInput(timerService.FILE_SETTIME);  
-    	ObjectInputStream ois = new ObjectInputStream(in);  
-    	String setTime = (String)ois.readObject();
-    	ois.close();
-    	in.close();
-    	
-    	int[] time = new int[2]; 
-    	if(setTime != null){
-    		String[] timeSplit = setTime.split(":");
-    		time[0]=Integer.parseInt(timeSplit[0]);
-    		time[1]=Integer.parseInt(timeSplit[1]);
-    	}
-    	return time;
-    }
+
 	private void alarmSetTime(int hour, int minute){
 		// Schedule the alarm!
 		// 0時を超えてないかったら、翌日
@@ -311,7 +322,7 @@ public class timerService extends Service {
 		}
 		else {
 			calendar.set(Calendar.HOUR_OF_DAY, hour);
-			calendar.set(Calendar.MINUTE, minute+1);
+			calendar.set(Calendar.MINUTE, minute);
 			calendar.set(Calendar.SECOND, 0);
 			if(calendar.getTimeInMillis() <= currentTime){
 				calendar.add(Calendar.DATE,1);
@@ -319,60 +330,63 @@ public class timerService extends Service {
 			
 		}
 		
-		Log.d(TAG,"setTime:"+calendar.get(Calendar.HOUR_OF_DAY)+":"+calendar.get(Calendar.MINUTE));
+		Log.d(TAG,"setTime:"+calendar.get(Calendar.DAY_OF_MONTH)+ " " +calendar.get(Calendar.HOUR_OF_DAY)+":"+calendar.get(Calendar.MINUTE));
 		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),mAlarmSender);
 
 	}
 	private void alarmSetCancel(){
-		mAmWakeup.cancel(mAlarmSender);
+		if(mAmWakeup!=null){
+			mAmWakeup.cancel(mAlarmSender);
+		}
 	}
 
 	private void soundPlay(){
-		if(mAlarm){
-		if(player != null){
-			soundReplay();
-		}
-		else {
-			player = new MediaPlayer();
+		if(mConfig.mAlarm){
 
-			//アラーム音として設定
-			player.setAudioStreamType(AudioManager.STREAM_ALARM);
-			//音源を指定
-			try {
-				player.setDataSource(this,Settings.System.DEFAULT_NOTIFICATION_URI);
-			} catch (IllegalArgumentException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (IllegalStateException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+			if(player != null){
+				soundReplay();
 			}
+			else {
+				player = new MediaPlayer();
 
-			//繰り返し再生するように指定
-			player.setLooping(true);
-			//
-			try {
-				player.prepare();
-			} catch (IllegalStateException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO 自動生成された catch ブロック
-				e.printStackTrace();
+				//アラーム音として設定
+				player.setAudioStreamType(AudioManager.STREAM_ALARM);
+				//音源を指定
+				try {
+					player.setDataSource(this,Settings.System.DEFAULT_NOTIFICATION_URI);
+				} catch (IllegalArgumentException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				} catch (SecurityException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				} catch (IllegalStateException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				}
+
+				//繰り返し再生するように指定
+				player.setLooping(true);
+				//
+				try {
+					player.prepare();
+				} catch (IllegalStateException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO 自動生成された catch ブロック
+					e.printStackTrace();
+				}
+				//最初に巻き戻し
+				player.seekTo(0);
+				//再生開始
+				player.start();
 			}
-			//最初に巻き戻し
-			player.seekTo(0);
-			//再生開始
-			player.start();
-		}
 		}
 	}
 	private void soundReplay(){
@@ -394,7 +408,7 @@ public class timerService extends Service {
 		}
 	}
 	private void vabrationStart(){
-		if(mVabration){
+		if(mConfig.mVabration){
 			if(vibrator == null){
 				vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);	
 			}
@@ -409,7 +423,7 @@ public class timerService extends Service {
 	class WaitHandler extends Handler {
 		@Override
         public void handleMessage(Message msg) {
-			alarmSetTime(mSetHour,mSetMinute);
+			alarmSetTime(mConfig.hour,mConfig.minute);
 		}
 		public void sleep(){
 			this.removeMessages(MSG);  
@@ -421,72 +435,18 @@ public class timerService extends Service {
 	 */
 	private void startSnooze(long snooze_time){
 		 
-		long snooze = System.currentTimeMillis() + mSnoozTime;
+		long snooze = System.currentTimeMillis() + mConfig.mSnoozTime;
 
 		Log.d(TAG,"Snooze Set");
 		mSnoozSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
 		mAmSnooze.set(AlarmManager.RTC_WAKEUP,snooze,mSnoozSender);
 		
-//		Long t = new Long(snooze_time);
-//		mSnoozeThread = new Snooze();
-//		mSnoozeThread.execute(t);
 	}
 	private void cancelSnooze(){
+		if(mAmSnooze != null){
 		mAmSnooze.cancel(mSnoozSender);
-//		if(mSnoozeThread != null){
-//			mSnoozeThread.cancel(true);
-//		}
+		}
 	}
-	class Snooze extends AsyncTask<Long,Void,Boolean> {
-		long alarmTime = 0;
-		@Override
-		protected Boolean doInBackground(Long... params) {
-			// TODO 自動生成されたメソッド・スタブ
-			long snoozeTime = params[0].longValue();
-			while(this.isCancelled() == false && snoozeTime > 0){
-				try {
-					Thread.sleep(THREAD_SLEEP_TIME);
-				} catch (InterruptedException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				}
-				snoozeTime -= THREAD_SLEEP_TIME;
-				
-			}
-			if(this.isCancelled() == true) return false;
-			return true;
-		}
-
-		@Override
-		protected void onPostExecute(Boolean result) {
-			// TODO 自動生成されたメソッド・スタブ
-			if(result){
-				Intent intent = new Intent(ACTION_WAKEUP);
-				startService(intent);
-				soundPlay();
-				vabrationStart();
-			}
-			super.onPostExecute(result);
-		}
-
-		@Override
-		protected void onPreExecute() {
-			// TODO 自動生成されたメソッド・スタブ
-			super.onPreExecute();
-		}
-
-		@Override
-		protected void onCancelled() {
-			// TODO 自動生成されたメソッド・スタブ
-			Intent intent = new Intent(SNOOZE_CANCEL);
-			startService(intent);
-			super.onCancelled();
-		}
-
-		
-		
-	}
-	
 
 }

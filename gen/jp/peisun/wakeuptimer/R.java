@@ -58,7 +58,7 @@ public final class R {
         public static final int menu_row=0x7f030004;
     }
     public static final class string {
-        public static final int alarm=0x7f04001b;
+        public static final int alarm=0x7f04001d;
         public static final int alarmDefault=0x7f040002;
         public static final int app_name=0x7f040001;
         public static final int calcRepeat=0x7f04000a;
@@ -68,9 +68,8 @@ public final class R {
         /**  以下は計算関数ダイアログ 
          */
         public static final int calcRepeatText=0x7f040009;
-        public static final int computational=0x7f04001e;
         public static final int hello=0x7f040000;
-        public static final int limitTime=0x7f04001f;
+        public static final int limitTime=0x7f040021;
         public static final int limittime=0x7f040010;
         public static final int limittimeDefault=0x7f040011;
         public static final int limittimeDefaultIndex=0x7f040012;
@@ -79,16 +78,17 @@ public final class R {
         public static final int limittimeDialogTitle=0x7f04000e;
         public static final int limittimeText=0x7f04000f;
         public static final int menuAarlm=0x7f040014;
-        public static final int menuComputational=0x7f040017;
         public static final int menuLimittime=0x7f040018;
         public static final int menuPreview=0x7f040019;
+        public static final int menuRepeat=0x7f040017;
         public static final int menuSnooze=0x7f040016;
         public static final int menuVibration=0x7f040015;
         /**  以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない 
          */
         public static final int menuWakeup=0x7f040013;
-        public static final int preview=0x7f040020;
-        public static final int snooze=0x7f04001d;
+        public static final int preview=0x7f040022;
+        public static final int repeat=0x7f040020;
+        public static final int snooze=0x7f04001f;
         public static final int snoozeDialogTitle=0x7f040008;
         /**  以下はスヌーズ時間の実効値 snoozeTimeTextと一致しないといけない 
          */
@@ -98,10 +98,14 @@ public final class R {
         /**  以下はスヌーズ時間 
          */
         public static final int snoozeTimeText=0x7f040004;
-        public static final int vibration=0x7f04001c;
+        public static final int vibration=0x7f04001e;
         public static final int vibrationDefault=0x7f040003;
+        /**  起床時刻のデフォルト 
+         */
+        public static final int wakeupHourDefault=0x7f04001a;
+        public static final int wakeupMinuteDefault=0x7f04001b;
         /**  以下はメニュー。メニューの順番はmakeMenuList()で決める 
          */
-        public static final int wakeupTime=0x7f04001a;
+        public static final int wakeupTime=0x7f04001c;
     }
 }

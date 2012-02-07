@@ -8,12 +8,12 @@
     <!-- 以下はスヌーズ時間 -->
     <string name="snoozeTimeText">5分,10分,15分</string>
     <!-- 以下はスヌーズ時間の実効値 snoozeTimeTextと一致しないといけない -->
-    <string name="snoozeTime">30000,60000,900000</string>
-    <string name="snoozeTimeDefault">30000</string>
+    <string name="snoozeTime">300000,600000,900000</string>
+    <string name="snoozeTimeDefault">300000</string>
     <string name="snoozeTimeDefaultIndex">1</string>
     <string name="snoozeDialogTitle">スヌーズ時間</string>
     <!-- 以下は計算関数ダイアログ -->
-    <string name="calcRepeatText">3問,5問,10問,10問以下のランダム</string>
+    <string name="calcRepeatText">3問,5問,10問,ランダム</string>
     <string name="calcRepeat">3,5,10,-1</string>
     <string name="calcRepeatDefault">5</string>
     <string name="calcRepeatDefaultIndex">1</string>
@@ -29,15 +29,18 @@
    	<string name="menuAarlm">アラーム</string>
    	<string name="menuVibration">バイブレーション</string>
    	<string name="menuSnooze">スヌーズ</string>
-   	<string name="menuComputational">設問数</string>
+   	<string name="menuRepeat">設問数</string>
    	<string name="menuLimittime">制限時間</string>
    	<string name="menuPreview">プレビュー</string>
+   	<!-- 起床時刻のデフォルト -->
+   	<string name="wakeupHourDefault">06</string>
+   	<string name="wakeupMinuteDefault">30</string>
     <!-- 以下はメニュー。メニューの順番はmakeMenuList()で決める -->
     <string name="wakeupTime">起床時刻,06:30,text,起床時間を設定します</string>
     <string name="alarm">アラーム,true,check,起床時間にアラームを鳴らします</string>
     <string name="vibration">バイブレーション,true,check,起床時間に震えます</string>
     <string name="snooze">スヌーズ,10分,text,スヌーズ時間を設定します</string>
-    <string name="computational">設問数,5問,text,計算問題の設問数を設定します</string>
+    <string name="repeat">設問数,5問,text,計算問題の設問数を設定します</string>
     <string name="limitTime">制限時間,30秒,text,計算の制限時間を設定します</string>
     <string name="preview">プレビュー,試してみる,text,計算問題を試してみます</string>
     

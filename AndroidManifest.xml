@@ -19,14 +19,19 @@
             <intent-filter >
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                
             </intent-filter>
+            <intent-filter >
+                <action android:name="jp.peisun.wakeupTimer.intent.config"/>
+            </intent-filter>
+            
         </activity>
         <activity 
             android:name="CalcActivity" 
             android:screenOrientation="portrait"
-            >
+            android:launchMode="singleTask">
 			<intent-filter >
-                <action android:name="android.intent.action.MAIN" />
+			    <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <action android:name="jp.peisun.wakeupTimer.intent.calcActivity"/>
             </intent-filter>
@@ -34,13 +39,16 @@
         <service android:name="timerService" >
             <intent-filter>
                 <action android:name="jp.peisun.wakeupTimer.intent.wakeup"/>
-                <action android:name="jp.peisun.wakeupTimer.intent.setTime"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.soundPlay"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.soundStop"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeStart"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.snoozeCancel"/>	
 				<action android:name="jp.peisun.wakeupTimer.intent.boot_completed"/>
 				<action android:name="jp.peisun.wakeupTimer.intent.finish"/>
+				<action android:name="jp.peisun.wakeupTimer.intent.setconfig"/>
+				<!-- デバッグ用のアラーム、バイブレーション、スヌーズを黙らせるだけ -->
+				<action android:name="jp.peisun.wakeupTimer.intent.force"/>
+				
         </intent-filter>    
         </service>
         
@@ -48,6 +56,8 @@
             <intent-filter>
                 <!-- デバイスブート時のインテントを受け取るレシーバ -->
             <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <!-- マナーモードが変更されたときのインテント -->
+            <action android:name="android.media.RINGER_MODE_CHANGED"/>
             </intent-filter>
         </receiver>
     </application>
