@@ -47,7 +47,7 @@ public class FileConfig {
 			sl.text("\n");
 
 			sl.startTag("", tag_alarm);
-			sl.text(Boolean.toString(config.mAlarm));
+			sl.text(Integer.toString(config.mAlarmPosition));
 			sl.endTag("", tag_alarm);
 			sl.text("\n");
 
@@ -120,7 +120,7 @@ public class FileConfig {
 							config.minute = mSetMinute;
 						}
 						else if(end_tag.equals(tag_alarm)){
-							config.mAlarm = Boolean.parseBoolean(element);
+							config.mAlarmPosition = Integer.parseInt(element);
 						}
 						else if(end_tag.equals(tag_vibration)){
 							config.mVabration = Boolean.parseBoolean(element);

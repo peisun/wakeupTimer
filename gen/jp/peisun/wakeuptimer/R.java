@@ -11,15 +11,17 @@ public final class R {
     public static final class attr {
     }
     public static final class drawable {
-        public static final int ic_launcher=0x7f020000;
+        public static final int btn_circle_normal=0x7f020000;
+        public static final int ic_btn_round_more_normal=0x7f020001;
+        public static final int ic_launcher=0x7f020002;
     }
     public static final class id {
         public static final int AnswerTextView=0x7f050007;
         public static final int CountDownTextView=0x7f050003;
-        public static final int DetailsTextView=0x7f050021;
+        public static final int DetailsTextView=0x7f050024;
         public static final int ExpressionTextView=0x7f050006;
-        public static final int MenutextView=0x7f050020;
-        public static final int ValuetextView=0x7f050022;
+        public static final int MenutextView=0x7f050023;
+        public static final int ValuetextView=0x7f050025;
         public static final int button0=0x7f050015;
         public static final int button1=0x7f050013;
         public static final int button13=0x7f050016;
@@ -47,6 +49,9 @@ public final class R {
         public static final int linearLayout8=0x7f050005;
         public static final int linearLayout9=0x7f050014;
         public static final int menulistView=0x7f05001c;
+        public static final int roundmoreButton=0x7f050022;
+        public static final int roundmoreDetailsTextView=0x7f050021;
+        public static final int roundmoreMenutextView=0x7f050020;
         public static final int textView2=0x7f050002;
         public static final int textView4=0x7f050004;
     }
@@ -55,10 +60,11 @@ public final class R {
         public static final int listviewdivider=0x7f030001;
         public static final int main=0x7f030002;
         public static final int menu_check=0x7f030003;
-        public static final int menu_row=0x7f030004;
+        public static final int menu_roundmore=0x7f030004;
+        public static final int menu_row=0x7f030005;
     }
     public static final class string {
-        public static final int alarm=0x7f04001d;
+        public static final int alarm=0x7f04001f;
         public static final int alarmDefault=0x7f040002;
         public static final int app_name=0x7f040001;
         public static final int calcRepeat=0x7f04000a;
@@ -69,7 +75,7 @@ public final class R {
          */
         public static final int calcRepeatText=0x7f040009;
         public static final int hello=0x7f040000;
-        public static final int limitTime=0x7f040021;
+        public static final int limitTime=0x7f040023;
         public static final int limittime=0x7f040010;
         public static final int limittimeDefault=0x7f040011;
         public static final int limittimeDefaultIndex=0x7f040012;
@@ -86,9 +92,13 @@ public final class R {
         /**  以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない 
          */
         public static final int menuWakeup=0x7f040013;
-        public static final int preview=0x7f040022;
-        public static final int repeat=0x7f040020;
-        public static final int snooze=0x7f04001f;
+        public static final int preview=0x7f040024;
+        public static final int repeat=0x7f040022;
+        public static final int selectAlarmDefaultIndex=0x7f04001d;
+        /**  アラーム音 
+         */
+        public static final int selectAlarmDialogTitle=0x7f04001c;
+        public static final int snooze=0x7f040021;
         public static final int snoozeDialogTitle=0x7f040008;
         /**  以下はスヌーズ時間の実効値 snoozeTimeTextと一致しないといけない 
          */
@@ -98,14 +108,21 @@ public final class R {
         /**  以下はスヌーズ時間 
          */
         public static final int snoozeTimeText=0x7f040004;
-        public static final int vibration=0x7f04001e;
+        public static final int vibration=0x7f040020;
         public static final int vibrationDefault=0x7f040003;
         /**  起床時刻のデフォルト 
          */
         public static final int wakeupHourDefault=0x7f04001a;
         public static final int wakeupMinuteDefault=0x7f04001b;
         /**  以下はメニュー。メニューの順番はmakeMenuList()で決める 
+ 0:TitleText 
+ 1:デフォルト値
+    		テキストの場合もあるし、位置を示す場合もある。makeMenuList()でViewへの表示内容を決めるので、
+    		起床時刻とプレビューはあまり関係がない
+    	　	checkの場合はちゃんとチェックしている 
+ 2:text or check: text=TextViewで表示 check:CheckButtonを表示 
+ 3:詳細 
          */
-        public static final int wakeupTime=0x7f04001c;
+        public static final int wakeupTime=0x7f04001e;
     }
 }

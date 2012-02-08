@@ -26,7 +26,7 @@
     <string name="limittimeDefaultIndex">0</string>
    	<!-- 以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない -->
    	<string name="menuWakeup">起床時刻</string>
-   	<string name="menuAarlm">アラーム</string>
+   	<string name="menuAarlm">アラーム音</string>
    	<string name="menuVibration">バイブレーション</string>
    	<string name="menuSnooze">スヌーズ</string>
    	<string name="menuRepeat">設問数</string>
@@ -35,13 +35,23 @@
    	<!-- 起床時刻のデフォルト -->
    	<string name="wakeupHourDefault">06</string>
    	<string name="wakeupMinuteDefault">30</string>
+   	<!-- アラーム音 -->
+   	<string name="selectAlarmDialogTitle">アラーム音</string>
+   	<string name="selectAlarmDefaultIndex">1</string>
     <!-- 以下はメニュー。メニューの順番はmakeMenuList()で決める -->
+    <!-- 0:TitleText -->
+    <!-- 1:デフォルト値
+    		テキストの場合もあるし、位置を示す場合もある。makeMenuList()でViewへの表示内容を決めるので、
+    		起床時刻とプレビューはあまり関係がない
+    	　	checkの場合はちゃんとチェックしている -->
+   	<!-- 2:text or check: text=TextViewで表示 check:CheckButtonを表示 -->
+   	<!-- 3:詳細 -->
     <string name="wakeupTime">起床時刻,06:30,text,起床時間を設定します</string>
-    <string name="alarm">アラーム,true,check,起床時間にアラームを鳴らします</string>
+    <string name="alarm">アラーム音,1,roundmore,起床時間にアラームを鳴らします</string>
     <string name="vibration">バイブレーション,true,check,起床時間に震えます</string>
-    <string name="snooze">スヌーズ,10分,text,スヌーズ時間を設定します</string>
-    <string name="repeat">設問数,5問,text,計算問題の設問数を設定します</string>
-    <string name="limitTime">制限時間,30秒,text,計算の制限時間を設定します</string>
+    <string name="snooze">スヌーズ,1,text,スヌーズ時間を設定します</string>
+    <string name="repeat">設問数,1,text,計算問題の設問数を設定します</string>
+    <string name="limitTime">制限時間,0,text,計算の制限時間を設定します</string>
     <string name="preview">プレビュー,試してみる,text,計算問題を試してみます</string>
     
 

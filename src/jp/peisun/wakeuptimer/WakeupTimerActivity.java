@@ -21,6 +21,9 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -32,9 +35,11 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -59,11 +64,14 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 	private int LimitTimeIndex = 0;
 	private int mCalcRepeatIndex = 0;
 	
+	private RingtoneManager mRingtoneManager = null;
 //	private CheckHandler mCheckHandler = null;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        mRingtoneManager = new RingtoneManager(getApplicationContext());
         
         readConfigData();
 		makeMenuList(mConfig);
@@ -232,6 +240,8 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 		config.mCalcRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
 		mCalcRepeatIndex = Integer.parseInt(getString(R.string.calcRepeatDefaultIndex));
 		
+		config.mAlarmPosition = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
+		
 		config.mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
 		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
 		return config;
@@ -261,12 +271,14 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     		selectLimitTimeDialog();
     	}
     	else if(position == mMenuMap.get(getString(R.string.menuAarlm))){
-    		mConfig.mAlarm = !mConfig.mAlarm;
-    		mMenuItem.get(position).setMenuCheck(mConfig.mAlarm );
-    		CheckBox buttonView = (CheckBox)view.findViewById(R.id.checkBox1);
-    		buttonView.setChecked(mConfig.mAlarm );
-    		sendSetConfigIntent(mConfig);
-    		Log.d(TAG,"mAlarmOn "+ mMenuItem.get(2).getMenuCheck());
+    		selectRingtoneDialog();
+    		
+//    		mConfig.mAlarm = !mConfig.mAlarm;
+//    		mMenuItem.get(position).setMenuCheck(mConfig.mAlarm );
+//    		CheckBox buttonView = (CheckBox)view.findViewById(R.id.checkBox1);
+//    		buttonView.setChecked(mConfig.mAlarm );
+//    		sendSetConfigIntent(mConfig);
+//    		Log.d(TAG,"mAlarmOn "+ mMenuItem.get(2).getMenuCheck());
     	}
     	else if(position == mMenuMap.get(getString(R.string.menuVibration))){
     		mConfig.mVabration = !mConfig.mVabration;
@@ -315,6 +327,44 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	String[] split = resouce.split(",");
 		return split[idx];
     }
+    private String findRingtoneString(int position){
+    	Cursor cursor = mRingtoneManager.getCursor();
+    	cursor.move(position);
+    	String name = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX);
+    	return name; 
+    }
+    private void selectRingtoneDialog(){
+    	
+        final Cursor cursor = mRingtoneManager.getCursor();
+        
+        
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle(R.string.selectAlarmDialogTitle);
+		builder.setSingleChoiceItems(cursor, mConfig.mAlarmPosition,cursor.getColumnName(RingtoneManager.TITLE_COLUMN_INDEX), new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int item) {
+				mConfig.mAlarmPosition = item;
+				final Ringtone mRingtone = mRingtoneManager.getRingtone(item);
+                mRingtone.play();
+                
+			}
+		});
+
+		builder.setPositiveButton("OK",
+				new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int id) {
+				sendSetConfigIntent(mConfig);
+				cursor.close();
+				int i = mMenuMap.get(getString(R.string.menuAarlm));
+				changeMenuRingtone(i,findRingtoneString(mConfig.mAlarmPosition),mListView.getChildAt(i));
+			}
+		});
+		
+
+		AlertDialog alert = builder.create();
+		alert.show();
+
+//		mRingtone = ringtoneManager.getRingtone(1);
+    }
 	private void selectSnoozeDialog(){
 
 		String resouce = getString(R.string.snoozeTimeText);
@@ -336,7 +386,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 			public void onClick(DialogInterface dialog, int id) {
 				sendSetConfigIntent(mConfig);
 				int i = mMenuMap.get(getString(R.string.menuSnooze));
-    			changeMenuList(i,String.format("%s",items[SnoozTimeListIndex]),mListView.getChildAt(i));
+    			changeMenuValue(i,String.format("%s",items[SnoozTimeListIndex]),mListView.getChildAt(i));
 			}
 		});
 		
@@ -366,7 +416,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 			public void onClick(DialogInterface dialog, int id) {
 				sendSetConfigIntent(mConfig);
 				int i = mMenuMap.get(getString(R.string.menuLimittime));
-    			changeMenuList(i,String.format("%s",items[LimitTimeIndex]),mListView.getChildAt(i));
+    			changeMenuValue(i,String.format("%s",items[LimitTimeIndex]),mListView.getChildAt(i));
 			}
 		});
 		
@@ -397,7 +447,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 			public void onClick(DialogInterface dialog, int id) {
 				sendSetConfigIntent(mConfig);
 				int i = mMenuMap.get(getString(R.string.menuRepeat));
-    			changeMenuList(i,String.format("%s",items[mCalcRepeatIndex]),mListView.getChildAt(i));
+    			changeMenuValue(i,String.format("%s",items[mCalcRepeatIndex]),mListView.getChildAt(i));
 			}
 		});
 		
@@ -419,7 +469,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 				mConfig.minute = minute;
 				sendSetConfigIntent(mConfig);
 				int i = mMenuMap.get(getString(R.string.menuWakeup));
-				changeMenuList(i,String.format("%02d:%02d",mConfig.hour,mConfig.minute),mListView.getChildAt(i));
+				changeMenuValue(i,String.format("%02d:%02d",mConfig.hour,mConfig.minute),mListView.getChildAt(i));
         	}
         }, hour, minute, true);
 
@@ -459,13 +509,23 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	}
     	
     }
-    private void changeMenuList(int position,String Value,View view){
+    private void changeMenuRingtone(int position,String Value,View view){
+    	if(mMenuItem != null){
+    		MenuList menu = mMenuItem.get(position);
+    		menu.setMenuValue(MenuList.ROUNDMORE,Value);
+    		TextView textView = (TextView)view.findViewById(R.id.roundmoreDetailsTextView);
+    		textView.setText((CharSequence)Value);
+    		Log.d(TAG,"changeMenuValue:"+menu.getMenuText()+ " " +menu.getMenuType());
+    		//mListView.setAdapter(new MenuAdapter(this,mMenuItem));
+    	}
+    }
+    private void changeMenuValue(int position,String Value,View view){
     	if(mMenuItem != null){
     		MenuList menu = mMenuItem.get(position);
     		menu.setMenuValue(MenuList.TEXT,Value);
     		TextView textView = (TextView)view.findViewById(R.id.ValuetextView);
     		textView.setText((CharSequence)Value);
-    		Log.d(TAG,"changeMenuList:"+menu.getMenuText()+ " " +menu.getMenuType());
+    		Log.d(TAG,"changeMenuValue:"+menu.getMenuText()+ " " +menu.getMenuType());
     		//mListView.setAdapter(new MenuAdapter(this,mMenuItem));
     	}
     }
@@ -541,9 +601,8 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
         position++;
         menu_text = getString(R.string.alarm);
         splitText = menu_text.split(",");
-        splitText[1] = Boolean.toString(mConfig.mAlarm);
-        menu = createMenuItem(position,splitText);
-        mMenuItem.add(menu);
+        splitText[1] = findRingtoneString(mConfig.mAlarmPosition);
+        mMenuItem.add(createMenuItem(position,splitText));
         
         position++;
         menu_text = getString(R.string.vibration);
@@ -595,6 +654,11 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 		public TextView detailsView;
 		public CheckBox valueView;
 	}
+    class RoundmoreViewHolder {
+		public TextView menuView;
+		public TextView detailsView;
+		public ImageView valueView;
+	}
     public class MenuAdapter extends BaseAdapter {
     	private ArrayList<MenuList> items;  
 		private LayoutInflater inflater;
@@ -628,6 +692,29 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 	    	holder.valueView.setTag(items.get(position));
 	    	return convertView;
 		}
+		private View convertRoundmoreViewHolder(int position,View convertView,ViewGroup parent){
+			RoundmoreViewHolder holder;
+			
+//    		if(convertView == null){
+    			convertView = inflater.inflate(R.layout.menu_roundmore, parent,false);
+	    		holder = new RoundmoreViewHolder();
+	    		holder.menuView = (TextView)convertView.findViewById(R.id.roundmoreMenutextView);
+//	    		holder.valueView = (TextView)convertView.findViewById(R.id.ValuetextView);
+	    		holder.detailsView = (TextView)convertView.findViewById(R.id.roundmoreDetailsTextView);
+	    		convertView.setTag(holder);
+//    		}
+//    		else {
+//    			holder = (ViewHolder)convertView.getTag();
+//    		}
+    		//if(position == 0){
+    			holder.menuView.setTextSize(24.0f);
+    			
+    		//}
+	    	holder.menuView.setText((CharSequence)this.items.get(position).getMenuText());
+	    	holder.detailsView.setText((CharSequence)this.items.get(position).getMenuValue());
+	    	
+	    	return convertView;
+		}
 		private View convertCheckViewHolder(int position,View convertView,ViewGroup parent){
 			CheckViewHolder holder;
 			
@@ -659,14 +746,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 					String tag = (String)buttonView.getTag();
 //					int position = mMenuMap.get(tag);
 					
-					if(tag.equals(getString(R.string.menuAarlm))){
-						if(mConfig.mAlarm != isChecked){
-							mConfig.mAlarm = isChecked;
-							sendSetConfigIntent(mConfig);
-							Log.d("onCheckedChanged", tag+" p=" + String.valueOf(p) + ", isChecked=" + mConfig.mAlarm );
-						}
-					}
-					else if(tag.equals(getString(R.string.menuVibration))){
+					if(tag.equals(getString(R.string.menuVibration))){
 						if(mConfig.mVabration != isChecked){
 							mConfig.mVabration = isChecked;
 							sendSetConfigIntent(mConfig);
@@ -693,6 +773,10 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 	    	else if(MenuList.TYPE_CHECK == menuType){
 	    		convertView = convertCheckViewHolder(position,convertView,parent);
 	    	}
+	    	else if(MenuList.TYPE_ROUNDMORE == menuType){
+	    		convertView = convertRoundmoreViewHolder(position,convertView,parent);
+	    	}
+	    	
 	    	
 			return convertView;
 		}
