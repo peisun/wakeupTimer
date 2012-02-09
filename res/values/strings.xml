@@ -40,11 +40,8 @@
    	<string name="selectAlarmDefaultIndex">1</string>
     <!-- 以下はメニュー。メニューの順番はmakeMenuList()で決める -->
     <!-- 0:TitleText -->
-    <!-- 1:デフォルト値
-    		テキストの場合もあるし、位置を示す場合もある。makeMenuList()でViewへの表示内容を決めるので、
-    		起床時刻とプレビューはあまり関係がない
-    	　	checkの場合はちゃんとチェックしている -->
-   	<!-- 2:text or check: text=TextViewで表示 check:CheckButtonを表示 -->
+    <!-- 1:デフォルト値　有効とされているのは、「プレビュー」だけ-->
+   	<!-- 2:text or check: text=TextViewで表示 check:CheckButtonを表示 roundmore:ImageButtonを表示-->
    	<!-- 3:詳細 -->
     <string name="wakeupTime">起床時刻,06:30,text,起床時間を設定します</string>
     <string name="alarm">アラーム音,1,roundmore,起床時間にアラームを鳴らします</string>

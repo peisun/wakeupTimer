@@ -152,8 +152,8 @@ public class timerService extends Service {
 					is = new FileInputStream(file);
 					mConfig = FileConfig.readConfig(is);
 				} catch (FileNotFoundException e) {
-					// TODO 自動生成された catch ブロック
-					mConfig = setConfigDefault();
+					// ファイルがなかったら、何もしないで終了する。たぶん、礼儀。
+					stopSelf();
 
 				}
 				
@@ -255,9 +255,11 @@ public class timerService extends Service {
 			mActivityStarted = false;
 		}
 		else if(Action.equals(FORCE_FINISH)){
+			// デバッグ時の隠しintent。面倒になってサービスを止めるときに使う
 			soundStop();
 			vavrationStop();
 			cancelSnooze();
+			stopSelf();
 		}
 		return START_STICKY;
 		// super.onStartCommand(intent, flags, startId);

@@ -176,18 +176,11 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 //		msg.arg1 = i;
 //		mCheckHandler.sendMessage(msg);
 //	}
-	private boolean checkConfigFile(){
-		String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
-		File file = new File(filepath);
-		boolean b =  file.exists();
-		
-		return b;
-	}
-	private void writeFile(ConfigData config){
+
+	private void writeFile(ConfigData config,File file){
 		OutputStream os;
 		try {
-			String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
-			File file = new File(filepath);
+			
 			os = new FileOutputStream(file);
 			//os = openFileOutput(FileConfig.xmlfile,MODE_PRIVATE);
 			FileConfig.writeConfig(os,config);
@@ -203,13 +196,13 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 	private void readConfigData()  {
 		// TODO 自動生成されたメソッド・スタブ
 		InputStream is = null;
-		if(checkConfigFile()==true){
+
+		String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
+		File file = new File(filepath);
+		
 		try {
-			String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
-			File file = new File(filepath);
 			is = new FileInputStream(file);
-			
-			//is = openFileInput(FileConfig.xmlfile);
+		
 			mConfig = FileConfig.readConfig(is);
 			is.close();
 			if(mConfig != null){
@@ -223,19 +216,20 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 			//e.printStackTrace();
 			
 			mConfig = setDefaultValue();
+			writeFile(mConfig,file);
 		} catch (IOException e){
 			e.printStackTrace();
 		}
-		}
-		else {
-			mConfig = setDefaultValue();
-			writeFile(mConfig);
-		}
+		
 		
 	}
 
 	private ConfigData setDefaultValue(){
 		ConfigData config = new ConfigData();
+		
+		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
+		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
+		
 		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
 		SnoozTimeListIndex = Integer.parseInt(getString(R.string.snoozeTimeDefaultIndex));
 		
