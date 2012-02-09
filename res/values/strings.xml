@@ -51,5 +51,20 @@
     <string name="limitTime">制限時間,0,text,計算の制限時間を設定します</string>
     <string name="preview">プレビュー,試してみる,text,計算問題を試してみます</string>
     
-
+	<!-- Preference -->
+	<string name="preference_wakeupTime">wakeupTime</string>
+	<string name="preference_ringtone">ringtone</string>
+	<string name="preference_vibration">vibrationCheck</string>
+	<string name="preference_snooze">snooze</string>
+	<string name="preference_vrepeat">repeat</string>
+	<string name="preference_limittime">limittime</string>
+	<!-- Summary -->
+	<string name="summary_wakeupTime">起床時間を設定します</string>
+    <string name="summary_alarm"></string>
+    <string name="summary_vibration">起床時間に震えます</string>
+    <string name="summary_snooze">スヌーズ時間を設定します</string>
+    <string name="summary_repeat">計算問題の設問数を設定します</string>
+    <string name="summary_limitTime">計算の制限時間を設定します</string>
+    <string name="summary_preview">計算問題を試してみます</string>
+    
 </resources>

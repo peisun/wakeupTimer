@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <Preference android:title="起床時間" android:summary="起床時間を設定します" android:key="@string/preference_wakeupTime" android:selectable="true" android:widgetLayout="@layout/menu_row"/><RingtonePreference android:key="Ringtone" android:title="@string/menuAarlm"/>
+    <CheckBoxPreference />
+    <ListPreference />
+    <ListPreference />
+    <ListPreference />
+    <Preference />
+
+    
+
+</PreferenceScreen>
