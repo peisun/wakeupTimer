@@ -2,26 +2,19 @@ package jp.peisun.wakeuptimer;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.KeyguardManager;
-import android.app.KeyguardManager.KeyguardLock;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 import android.widget.Button;
 import android.app.AlertDialog;
-import android.content.Context;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 
-import java.io.InputStream;
-import java.io.ObjectInputStream;
 import java.util.*;
 
 public class CalcActivity extends Activity implements OnClickListener {
@@ -57,7 +50,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private TextView numberView; /* 入力数字 */
 	private TextView remainingTimeView; /* 残り時間 */
 	private TextView expressionView; /* 計算式 */
-	private boolean calculating = false; /* false:計算前/true:計算中 */
 	private int keytouch = 0;
 	private int answer = 0;
 	private int creatAnswer = 0;
@@ -65,7 +57,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private long mLimitTime = 0;
 
 	private AlertDialog mAlertFinish;
-	private AlertDialog mNextDialog ;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -126,8 +117,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		Bundle extras=getIntent().getExtras();
 		if(extras != null){
 			preview = extras.getBoolean(PREVIEW);
-//			mRepeat = extras.getInt(REPEAT, Integer.parseInt(getString(R.string.calcRepeatDefault)));
-//			mLimitTime = extras.getLong(LIMITTIME,Long.parseLong(getString(R.string.limittimeDefault)));
+
 			mRepeat = extras.getInt(REPEAT);
 			mLimitTime = extras.getLong(LIMITTIME);
 			Log.d(TAG,"preview "+ preview);
@@ -146,10 +136,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
 		
-		if(calculating == false){
-			showDialog(START_DIALOG_ID);
-			calculating = true;
-		}
+		showDialog(START_DIALOG_ID);
+		
 		createExpression();
 		super.onResume();
 	}
@@ -316,14 +304,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private Dialog createStartDialog(){
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		
-		//dlg.setTitle("TEST");
 		dlg.setMessage("計算を開始します。");
 		
 		dlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				// TODO 自動生成されたメソッド・スタブ
-				calculating = true; /* 計算中 */
 				
 				if(preview == false){
 					sendSoundStopIntent();
@@ -352,7 +338,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 		}
 		
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
-		//dlg.setTitle("TEST");
 		dlg.setMessage(text);
 		dlg.setPositiveButton(positive_text, new DialogInterface.OnClickListener(){
 
@@ -375,9 +360,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		
 		
 	}
-	private void finishActivity(){
-		mCountdownHandler.complete();
-	}
+
 	private Dialog createFinishDilog(){
 		sendSnoozeCancelIntent();
 		AlertDialog.Builder mFinishdlg = new AlertDialog.Builder(this);
@@ -393,8 +376,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 					Intent intent = new Intent(timerService.ACTION_FINISH);
 					startService(intent);
 				}
-				calculating = false; /* 計算終了 */
-				//finishActivity();
 				dialog.dismiss();
 				finish();
 			}
@@ -427,10 +408,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		// Backキーが押されたらActivityは死ぬ
 		// 計算を拒否したことになり、スヌーズをかける
-		//if(!preview){
+		if(!preview){
 			stopCountDown();	
 			sendSnoozeStartIntent();
-		//}
+		}
 		finish();
 		super.onBackPressed();
 	}
@@ -439,10 +420,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		// Activityが他のアプリにより、バックグランドに入ろうとする
 		// この場合も計算を拒否したこととなり、スヌーズをかける
-		//if(!preview){
+		if(!preview){
 			stopCountDown();
 			sendSnoozeStartIntent();
-		//}
+		}
 		finish();
 		super.onUserLeaveHint();
 	}

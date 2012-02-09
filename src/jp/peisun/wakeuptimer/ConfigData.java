@@ -1,6 +1,5 @@
 package jp.peisun.wakeuptimer;
 
-import java.util.Date;
 
 public class ConfigData  {
 	public int mRingtonePosition;

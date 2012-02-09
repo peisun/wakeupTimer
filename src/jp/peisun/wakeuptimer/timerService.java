@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
@@ -30,14 +29,13 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.Vibrator;
-import android.provider.Settings;
 import android.util.Log;
 
 
 
 public class timerService extends Service {
 	private static final String TAG = "timerService";
-	private static  boolean debug = true;
+	private static  boolean debug = false;
 	
 	/* 定数 */
 	
@@ -108,7 +106,7 @@ public class timerService extends Service {
 	/*
 	 * Activityの状態
 	 */
-	private boolean mActivityStarted = false;
+
 	@Override
 	public IBinder onBind(Intent arg0) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -118,8 +116,6 @@ public class timerService extends Service {
 	@Override
 	public void onCreate() {
 		// TODO 自動生成されたメソッド・スタブ
-		//am = (AlarmManager)getSystemService(ALARM_SERVICE);
-		//mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		
 		super.onCreate();
 	}
@@ -252,7 +248,6 @@ public class timerService extends Service {
 		else if(Action.equals(ACTION_FINISH)){
 			mWaitHandler.sleep();
 			cancelSnooze();
-			mActivityStarted = false;
 		}
 		else if(Action.equals(FORCE_FINISH)){
 			// デバッグ時の隠しintent。面倒になってサービスを止めるときに使う
@@ -265,24 +260,13 @@ public class timerService extends Service {
 		// super.onStartCommand(intent, flags, startId);
 	}
 	
-	private ConfigData setConfigDefault(){
-		ConfigData config = new ConfigData();
-		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
-		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
-		config.mCalcRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
-		config.mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
-		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
-		config.mRingtonePosition = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
-		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
-		return config;
-	}
+
 	private void writeFile(ConfigData config){
 		OutputStream os = null;
 		try {
 			String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
 			File file = new File(filepath);
 			os = new FileOutputStream(file);
-			//os = openFileOutput(FileConfig.xmlfile,MODE_PRIVATE);
 			FileConfig.writeConfig(os,config);
 			os.close();
 		} catch (FileNotFoundException e) {
@@ -358,17 +342,7 @@ public class timerService extends Service {
 		}
 	}
 	
-//	private void RingtonePlay(){
-//		if(mRingtone != null){
-//			mRingtone.play();
-//		}
-//	}
-//	
-//	private void RingtoneStop(){
-//		if(mRingtone != null){
-//			mRingtone.stop();
-//		}
-//	}
+
 	public void soundPlay(int position){
 		mMediaPlayer = new MediaPlayer();
 		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
@@ -446,5 +420,4 @@ public class timerService extends Service {
 		mAmSnooze.cancel(mSnoozSender);
 		}
 	}
-
 }

@@ -1,9 +1,5 @@
 package jp.peisun.wakeuptimer;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -24,8 +20,11 @@ public class wakeupReceiver extends BroadcastReceiver {
 		if(action.equals(Intent.ACTION_BOOT_COMPLETED)){
 			Intent i = new Intent(timerService.BOOT_ACTION);
 			mContext.startService(i);
+			Log.d(TAG,"intent:"+Intent.ACTION_BOOT_COMPLETED);
 			
 		}
+		// マナーモードのときに、それを解除することもできるが、
+		// 仕様としてどうするか考え中なので、コードが残っている
 		else if(action.equals(AudioManager.RINGER_MODE_CHANGED_ACTION)){
 			if (intent.getIntExtra(AudioManager.EXTRA_RINGER_MODE, -1) == AudioManager.RINGER_MODE_VIBRATE) {
                 // マナーモード

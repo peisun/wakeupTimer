@@ -1,6 +1,5 @@
 package jp.peisun.wakeuptimer;
 
-import java.lang.reflect.Method;
 
 /*
  * メニューリスト
