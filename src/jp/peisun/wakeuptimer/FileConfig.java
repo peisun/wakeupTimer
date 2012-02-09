@@ -18,7 +18,8 @@ public class FileConfig {
 	private static final String TAG = "FileConfig";
 	public static final String tag_file = "config";
 	public static final String tag_waketime = "wakeuptime";
-	public static final String tag_alarm = "alarm";
+	public static final String tag_ringtoneposition = "ringtoneposition";
+	public static final String tag_ringtonepath = "ringtonepath";
 	public static final String tag_vibration = "vibration";
 	public static final String tag_repeat = "repeat";
 	public static final String tag_limittime = "limittime";
@@ -46,11 +47,20 @@ public class FileConfig {
 			sl.endTag("", tag_waketime);
 			sl.text("\n");
 
-			sl.startTag("", tag_alarm);
-			sl.text(Integer.toString(config.mAlarmPosition));
-			sl.endTag("", tag_alarm);
+			sl.startTag("", tag_ringtoneposition);
+			sl.text(Integer.toString(config.mRingtonePosition));
+			sl.endTag("", tag_ringtoneposition);
 			sl.text("\n");
 
+			sl.startTag("", tag_ringtonepath);
+			if(config.mRingtonePath == null){
+				sl.text("");
+			}
+			else {
+				sl.text(config.mRingtonePath);
+			}
+			sl.endTag("", tag_ringtonepath);
+			sl.text("\n");
 
 			sl.startTag("", tag_vibration);
 			sl.text(Boolean.toString(config.mVabration));
@@ -119,8 +129,11 @@ public class FileConfig {
 							config.hour =mSetHour;
 							config.minute = mSetMinute;
 						}
-						else if(end_tag.equals(tag_alarm)){
-							config.mAlarmPosition = Integer.parseInt(element);
+						else if(end_tag.equals(tag_ringtoneposition)){
+							config.mRingtonePosition = Integer.parseInt(element);
+						}
+						else if(end_tag.equals(tag_ringtoneposition)){
+							config.mRingtonePath = element;
 						}
 						else if(end_tag.equals(tag_vibration)){
 							config.mVabration = Boolean.parseBoolean(element);

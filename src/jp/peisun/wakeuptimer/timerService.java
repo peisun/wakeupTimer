@@ -22,6 +22,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -61,7 +64,9 @@ public class timerService extends Service {
 	public static final String SET_MINUTE = "setMinute"; 
 	public static final String SNOOZE = "snooze";
 	public static final String SOUND = "sound";
+	public static final String SOUND_URI = "ringtonepath";
 	public static final String VIBRATION = "vibration";
+	public static final String CONFIG = "config";
 	
 	/*
 	 * Alarmを再設定するまでの時間稼ぎ
@@ -80,7 +85,11 @@ public class timerService extends Service {
 	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
 	/* アラーム音 */
-	private MediaPlayer player;
+//	private RingtoneManager mRingtoneManager = null;
+//	private Ringtone mRingtone = null;
+	public final static int RINGTON_STREAMTYPE = RingtoneManager.TYPE_ALARM;
+	public final static int AUDIO_STREAMTYPE = AudioManager.STREAM_ALARM;
+	MediaPlayer mMediaPlayer = null;
 	/* バイブレーション */
 	private Vibrator vibrator=null;
 	// 0秒後に3秒振動、1秒待って3秒振動、1秒待って3秒振動...
@@ -158,13 +167,15 @@ public class timerService extends Service {
 				}
 
 				alarmSetTime(mConfig.hour,mConfig.minute);
+				
 		}
 		else if(Action.equals(SET_CONFIG)){
 
 			mConfig.mSnoozTime = intent.getLongExtra(SNOOZE, mConfig.mSnoozTime);
 			mConfig.mCalcRepeat = intent.getIntExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
 			mConfig.mLimitTime = intent.getLongExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
-			mConfig.mAlarm = intent.getBooleanExtra(SOUND, mConfig.mAlarm);
+			mConfig.mRingtonePosition = intent.getIntExtra(SOUND, mConfig.mRingtonePosition);
+			mConfig.mRingtonePath = intent.getStringExtra(SOUND_URI);
 			mConfig.mVabration = intent.getBooleanExtra(VIBRATION, mConfig.mVabration);
 			int hour = intent.getIntExtra(SET_HOUR, mConfig.hour);
 			int minute = intent.getIntExtra(SET_MINUTE, mConfig.minute);
@@ -175,11 +186,13 @@ public class timerService extends Service {
 				mConfig.minute = minute;
 			}
 			alarmSetTime(mConfig.hour,mConfig.minute);
+			
 			writeFile(mConfig);
 			Log.d(TAG,"intent:"+SET_CONFIG+" time= "+mConfig.hour+":"+mConfig.minute);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mSnoozTime= "+mConfig.mSnoozTime);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mVabration= "+mConfig.mVabration);
-			Log.d(TAG,"intent:"+SET_CONFIG+" mAlarm= "+mConfig.mAlarm);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePosition= "+mConfig.mRingtonePosition);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePath"+mConfig.mRingtonePath);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mRepeat= "+mConfig.mCalcRepeat);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mLimittime= "+mConfig.mLimitTime);
 		}
@@ -187,7 +200,7 @@ public class timerService extends Service {
 		/* アラームの鳴動 */
 		else if(Action.equals(SOUND_PALY)){
 			Log.d(TAG,"intent:"+SOUND_PALY);
-			soundPlay();
+			soundPlay(mConfig.mRingtonePosition);
 			vabrationStart();
 		}
 		/* アラームの停止 */
@@ -219,10 +232,11 @@ public class timerService extends Service {
 			alarmSetCancel();
 			
 			// アラームの鳴動
-			soundPlay();
+			soundPlay(mConfig.mRingtonePosition);
 			vabrationStart();
 			
 			// CalcActivityを呼び出す
+
 			// Activityをすでに起動してたら、新たには起動しない
 			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
 			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
@@ -256,7 +270,7 @@ public class timerService extends Service {
 		config.mCalcRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
 		config.mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
 		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
-		config.mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
+		config.mRingtonePosition = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
 		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
 		return config;
 	}
@@ -341,71 +355,53 @@ public class timerService extends Service {
 			mAmWakeup.cancel(mAlarmSender);
 		}
 	}
-
-	private void soundPlay(){
-		if(mConfig.mAlarm){
-
-			if(player != null){
-				soundReplay();
-			}
-			else {
-				player = new MediaPlayer();
-
-				//アラーム音として設定
-				player.setAudioStreamType(AudioManager.STREAM_ALARM);
-				//音源を指定
-				try {
-					player.setDataSource(this,Settings.System.DEFAULT_NOTIFICATION_URI);
-				} catch (IllegalArgumentException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				} catch (SecurityException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				} catch (IllegalStateException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				}
-
-				//繰り返し再生するように指定
-				player.setLooping(true);
-				//
-				try {
-					player.prepare();
-				} catch (IllegalStateException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO 自動生成された catch ブロック
-					e.printStackTrace();
-				}
-				//最初に巻き戻し
-				player.seekTo(0);
-				//再生開始
-				player.start();
-			}
+	
+//	private void RingtonePlay(){
+//		if(mRingtone != null){
+//			mRingtone.play();
+//		}
+//	}
+//	
+//	private void RingtoneStop(){
+//		if(mRingtone != null){
+//			mRingtone.stop();
+//		}
+//	}
+	public void soundPlay(int position){
+		mMediaPlayer = new MediaPlayer();
+		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
+		RingtoneManager mRingtoneManager = new RingtoneManager(this);
+		mRingtoneManager.setType(RINGTON_STREAMTYPE);
+		Uri uri = mRingtoneManager.getRingtoneUri(position);
+		try {
+			mMediaPlayer.setDataSource(this, uri);
+		} catch (IllegalArgumentException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
 		}
+		mMediaPlayer.setLooping(true);
+		try {
+			mMediaPlayer.prepare();
+		} catch (IllegalStateException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		}
+		mMediaPlayer.start();
 	}
-	private void soundReplay(){
-		if(player == null){
-			soundPlay();
-		}
-		else {
-			//最初に巻き戻し
-			player.seekTo(0);
-			//再生開始
-			player.start();
-		}
-	}
-	private void soundStop(){
-		if(player != null){
-			player.stop();
-			player.release();
-			player = null;
-		}
+	public void soundStop(){
+		mMediaPlayer.stop();
 	}
 	private void vabrationStart(){
 		if(mConfig.mVabration){

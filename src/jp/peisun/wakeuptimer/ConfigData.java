@@ -2,9 +2,9 @@ package jp.peisun.wakeuptimer;
 
 import java.util.Date;
 
-public class ConfigData {
-	public boolean mAlarm = true;
-	public int mAlarmPosition;
+public class ConfigData  {
+	public int mRingtonePosition;
+	public String mRingtonePath;
 	public boolean mVabration = true;
 	public int hour;
 	public int minute;

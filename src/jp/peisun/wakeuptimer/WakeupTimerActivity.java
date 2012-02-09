@@ -24,9 +24,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -65,13 +67,16 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 	private int mCalcRepeatIndex = 0;
 	
 	private RingtoneManager mRingtoneManager = null;
+	private final Intent intentActionRingTonePicker = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);  
+	private final int RINGTONE_REQUESETCODE = 9999;
 //	private CheckHandler mCheckHandler = null;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         
-        mRingtoneManager = new RingtoneManager(getApplicationContext());
+        mRingtoneManager = new RingtoneManager(this);
+        mRingtoneManager.setType(timerService.RINGTON_STREAMTYPE);
         
         readConfigData();
 		makeMenuList(mConfig);
@@ -240,9 +245,9 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 		config.mCalcRepeat = Integer.parseInt(getString(R.string.calcRepeatDefault));
 		mCalcRepeatIndex = Integer.parseInt(getString(R.string.calcRepeatDefaultIndex));
 		
-		config.mAlarmPosition = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
+		config.mRingtonePosition = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
+		config.mRingtonePath = mRingtoneManager.getRingtoneUri(config.mRingtonePosition).toString();
 		
-		config.mAlarm = Boolean.parseBoolean(getString(R.string.alarmDefault));
 		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
 		return config;
 	}
@@ -327,43 +332,27 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	String[] split = resouce.split(",");
 		return split[idx];
     }
+    private Uri findRingtoneUri(int position){
+    	Uri uri = mRingtoneManager.getRingtoneUri(position);
+    	return uri; 
+    }
     private String findRingtoneString(int position){
-    	Cursor cursor = mRingtoneManager.getCursor();
-    	cursor.move(position);
-    	String name = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX);
+    	String name;
+    	
+    		Cursor cursor = mRingtoneManager.getCursor();
+    		cursor.moveToPosition(position);
+    		name = cursor.getString(RingtoneManager.TITLE_COLUMN_INDEX);
+    		Log.d(TAG,"RingtoneString "+ position + " "+ name);
+    	
     	return name; 
     }
     private void selectRingtoneDialog(){
-    	
-        final Cursor cursor = mRingtoneManager.getCursor();
-        
-        
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle(R.string.selectAlarmDialogTitle);
-		builder.setSingleChoiceItems(cursor, mConfig.mAlarmPosition,cursor.getColumnName(RingtoneManager.TITLE_COLUMN_INDEX), new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int item) {
-				mConfig.mAlarmPosition = item;
-				final Ringtone mRingtone = mRingtoneManager.getRingtone(item);
-                mRingtone.play();
-                
-			}
-		});
-
-		builder.setPositiveButton("OK",
-				new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int id) {
-				sendSetConfigIntent(mConfig);
-				cursor.close();
-				int i = mMenuMap.get(getString(R.string.menuAarlm));
-				changeMenuRingtone(i,findRingtoneString(mConfig.mAlarmPosition),mListView.getChildAt(i));
-			}
-		});
-		
-
-		AlertDialog alert = builder.create();
-		alert.show();
-
-//		mRingtone = ringtoneManager.getRingtone(1);
+    	intentActionRingTonePicker.putExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI,mRingtoneManager.getRingtoneUri(mConfig.mRingtonePosition));
+    	intentActionRingTonePicker.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, getString(R.string.menuAarlm));
+    	intentActionRingTonePicker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+    	intentActionRingTonePicker.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, false);
+    	intentActionRingTonePicker.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE,timerService.RINGTON_STREAMTYPE);
+    	this.startActivityForResult(intentActionRingTonePicker,RINGTONE_REQUESETCODE);
     }
 	private void selectSnoozeDialog(){
 
@@ -482,14 +471,18 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	toast.show();
     }
     private void sendSetConfigIntent(ConfigData config){
+    	
     	Intent intent = new Intent(timerService.SET_CONFIG);
+    	
+    	
     	intent.putExtra(timerService.SET_HOUR, config.hour);
     	intent.putExtra(timerService.SET_MINUTE, config.minute);
     	intent.putExtra(timerService.SNOOZE, config.mSnoozTime);
     	intent.putExtra(CalcActivity.REPEAT, config.mCalcRepeat);
-    	intent.putExtra(timerService.SOUND,config.mAlarm);
+    	intent.putExtra(timerService.SOUND,config.mRingtonePosition);
     	intent.putExtra(timerService.VIBRATION, config.mVabration);
     	intent.putExtra(CalcActivity.LIMITTIME, config.mLimitTime);
+    	intent.putExtra(timerService.SOUND_URI, config.mRingtonePath);
     	startService(intent);
     }
 
@@ -509,7 +502,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
     	}
     	
     }
-    private void changeMenuRingtone(int position,String Value,View view){
+    private void changeMenuRoundmore(int position,String Value,View view){
     	if(mMenuItem != null){
     		MenuList menu = mMenuItem.get(position);
     		menu.setMenuValue(MenuList.ROUNDMORE,Value);
@@ -601,7 +594,7 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
         position++;
         menu_text = getString(R.string.alarm);
         splitText = menu_text.split(",");
-        splitText[1] = findRingtoneString(mConfig.mAlarmPosition);
+        splitText[1] = findRingtoneString(mConfig.mRingtonePosition);
         mMenuItem.add(createMenuItem(position,splitText));
         
         position++;
@@ -800,6 +793,25 @@ public class WakeupTimerActivity extends Activity implements OnItemClickListener
 		}  
     	
     }
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO 自動生成されたメソッド・スタブ	
+		if(RINGTONE_REQUESETCODE == requestCode){
+			if(resultCode == RESULT_OK){
+				Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+			    if (uri != null) {
+			    	mConfig.mRingtonePosition = mRingtoneManager.getRingtonePosition(uri);
+			    	mConfig.mRingtonePath = uri.toString();
+			    	int i = mMenuMap.get(getString(R.string.menuAarlm));
+			    	String ringtone_name = findRingtoneString(mConfig.mRingtonePosition);
+			    	Log.d(TAG,"Ringtone name "+ ringtone_name);
+			    	changeMenuRoundmore(i,ringtone_name,mListView.getChildAt(i));
+			    	sendSetConfigIntent(mConfig);
+			    }
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 	
 
 }
