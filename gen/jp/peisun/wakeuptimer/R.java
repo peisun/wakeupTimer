@@ -16,44 +16,45 @@ public final class R {
         public static final int ic_launcher=0x7f020002;
     }
     public static final class id {
-        public static final int AnswerTextView=0x7f050007;
-        public static final int CountDownTextView=0x7f050003;
-        public static final int DetailsTextView=0x7f050024;
-        public static final int ExpressionTextView=0x7f050006;
-        public static final int MenutextView=0x7f050023;
-        public static final int ValuetextView=0x7f050025;
-        public static final int button0=0x7f050015;
-        public static final int button1=0x7f050013;
-        public static final int button13=0x7f050016;
-        public static final int button14=0x7f050017;
-        public static final int button2=0x7f050012;
-        public static final int button3=0x7f050011;
-        public static final int button4=0x7f05000f;
-        public static final int button5=0x7f05000e;
-        public static final int button6=0x7f05000d;
-        public static final int button7=0x7f05000b;
-        public static final int button8=0x7f05000a;
-        public static final int button9=0x7f050009;
-        public static final int buttonContinue=0x7f05001a;
-        public static final int buttonEnter=0x7f05001b;
-        public static final int checkBox1=0x7f05001f;
-        public static final int chkDetailsTextView=0x7f05001e;
-        public static final int chkMenutextView=0x7f05001d;
-        public static final int linearLayout1=0x7f050000;
-        public static final int linearLayout2=0x7f050008;
-        public static final int linearLayout3=0x7f05000c;
-        public static final int linearLayout4=0x7f050010;
-        public static final int linearLayout5=0x7f050001;
-        public static final int linearLayout6=0x7f050019;
-        public static final int linearLayout7=0x7f050018;
-        public static final int linearLayout8=0x7f050005;
-        public static final int linearLayout9=0x7f050014;
-        public static final int menulistView=0x7f05001c;
-        public static final int roundmoreButton=0x7f050022;
-        public static final int roundmoreDetailsTextView=0x7f050021;
-        public static final int roundmoreMenutextView=0x7f050020;
-        public static final int textView2=0x7f050002;
-        public static final int textView4=0x7f050004;
+        public static final int AnswerTextView=0x7f060007;
+        public static final int CountDownTextView=0x7f060003;
+        public static final int DetailsTextView=0x7f060024;
+        public static final int ExpressionTextView=0x7f060006;
+        public static final int MenutextView=0x7f060023;
+        public static final int PreferenceValuetextView=0x7f060026;
+        public static final int ValuetextView=0x7f060025;
+        public static final int button0=0x7f060015;
+        public static final int button1=0x7f060013;
+        public static final int button13=0x7f060016;
+        public static final int button14=0x7f060017;
+        public static final int button2=0x7f060012;
+        public static final int button3=0x7f060011;
+        public static final int button4=0x7f06000f;
+        public static final int button5=0x7f06000e;
+        public static final int button6=0x7f06000d;
+        public static final int button7=0x7f06000b;
+        public static final int button8=0x7f06000a;
+        public static final int button9=0x7f060009;
+        public static final int buttonContinue=0x7f06001a;
+        public static final int buttonEnter=0x7f06001b;
+        public static final int checkBox1=0x7f06001f;
+        public static final int chkDetailsTextView=0x7f06001e;
+        public static final int chkMenutextView=0x7f06001d;
+        public static final int linearLayout1=0x7f060000;
+        public static final int linearLayout2=0x7f060008;
+        public static final int linearLayout3=0x7f06000c;
+        public static final int linearLayout4=0x7f060010;
+        public static final int linearLayout5=0x7f060001;
+        public static final int linearLayout6=0x7f060019;
+        public static final int linearLayout7=0x7f060018;
+        public static final int linearLayout8=0x7f060005;
+        public static final int linearLayout9=0x7f060014;
+        public static final int menulistView=0x7f06001c;
+        public static final int roundmoreButton=0x7f060022;
+        public static final int roundmoreDetailsTextView=0x7f060021;
+        public static final int roundmoreMenutextView=0x7f060020;
+        public static final int textView2=0x7f060002;
+        public static final int textView4=0x7f060004;
     }
     public static final class layout {
         public static final int calclayout=0x7f030000;
@@ -62,64 +63,85 @@ public final class R {
         public static final int menu_check=0x7f030003;
         public static final int menu_roundmore=0x7f030004;
         public static final int menu_row=0x7f030005;
+        public static final int preference_row=0x7f030006;
     }
     public static final class string {
-        public static final int alarm=0x7f04001f;
-        public static final int alarmDefault=0x7f040002;
-        public static final int app_name=0x7f040001;
-        public static final int calcRepeat=0x7f04000a;
-        public static final int calcRepeatDefault=0x7f04000b;
-        public static final int calcRepeatDefaultIndex=0x7f04000c;
-        public static final int calcRepeatDialogTitle=0x7f04000d;
+        public static final int alarm=0x7f05001f;
+        public static final int alarmDefault=0x7f050002;
+        public static final int app_name=0x7f050001;
+        public static final int calcRepeat=0x7f05000a;
+        public static final int calcRepeatDefault=0x7f05000b;
+        public static final int calcRepeatDefaultIndex=0x7f05000c;
+        public static final int calcRepeatDialogTitle=0x7f05000d;
         /**  以下は計算関数ダイアログ 
          */
-        public static final int calcRepeatText=0x7f040009;
-        public static final int hello=0x7f040000;
-        public static final int limitTime=0x7f040023;
-        public static final int limittime=0x7f040010;
-        public static final int limittimeDefault=0x7f040011;
-        public static final int limittimeDefaultIndex=0x7f040012;
+        public static final int calcRepeatText=0x7f050009;
+        public static final int hello=0x7f050000;
+        public static final int limitTime=0x7f050023;
+        public static final int limittime=0x7f050010;
+        public static final int limittimeDefault=0x7f050011;
+        public static final int limittimeDefaultIndex=0x7f050012;
         /**  以下は制限時間ダイアログ 
          */
-        public static final int limittimeDialogTitle=0x7f04000e;
-        public static final int limittimeText=0x7f04000f;
-        public static final int menuAarlm=0x7f040014;
-        public static final int menuLimittime=0x7f040018;
-        public static final int menuPreview=0x7f040019;
-        public static final int menuRepeat=0x7f040017;
-        public static final int menuSnooze=0x7f040016;
-        public static final int menuVibration=0x7f040015;
+        public static final int limittimeDialogTitle=0x7f05000e;
+        public static final int limittimeText=0x7f05000f;
+        public static final int menuAarlm=0x7f050014;
+        public static final int menuLimittime=0x7f050018;
+        public static final int menuPreview=0x7f050019;
+        public static final int menuRepeat=0x7f050017;
+        public static final int menuSnooze=0x7f050016;
+        public static final int menuVibration=0x7f050015;
         /**  以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない 
          */
-        public static final int menuWakeup=0x7f040013;
-        public static final int preview=0x7f040024;
-        public static final int repeat=0x7f040022;
-        public static final int selectAlarmDefaultIndex=0x7f04001d;
+        public static final int menuWakeup=0x7f050013;
+        public static final int preference_limittime=0x7f05002a;
+        public static final int preference_ringtone=0x7f050026;
+        public static final int preference_snooze=0x7f050028;
+        public static final int preference_vibration=0x7f050027;
+        public static final int preference_vrepeat=0x7f050029;
+        /**  Preference 
+         */
+        public static final int preference_wakeupTime=0x7f050025;
+        public static final int preview=0x7f050024;
+        public static final int repeat=0x7f050022;
+        public static final int selectAlarmDefaultIndex=0x7f05001d;
         /**  アラーム音 
          */
-        public static final int selectAlarmDialogTitle=0x7f04001c;
-        public static final int snooze=0x7f040021;
-        public static final int snoozeDialogTitle=0x7f040008;
+        public static final int selectAlarmDialogTitle=0x7f05001c;
+        public static final int snooze=0x7f050021;
+        public static final int snoozeDialogTitle=0x7f050008;
         /**  以下はスヌーズ時間の実効値 snoozeTimeTextと一致しないといけない 
          */
-        public static final int snoozeTime=0x7f040005;
-        public static final int snoozeTimeDefault=0x7f040006;
-        public static final int snoozeTimeDefaultIndex=0x7f040007;
+        public static final int snoozeTime=0x7f050005;
+        public static final int snoozeTimeDefault=0x7f050006;
+        public static final int snoozeTimeDefaultIndex=0x7f050007;
         /**  以下はスヌーズ時間 
          */
-        public static final int snoozeTimeText=0x7f040004;
-        public static final int vibration=0x7f040020;
-        public static final int vibrationDefault=0x7f040003;
+        public static final int snoozeTimeText=0x7f050004;
+        public static final int summary_alarm=0x7f05002c;
+        public static final int summary_limitTime=0x7f050030;
+        public static final int summary_preview=0x7f050031;
+        public static final int summary_repeat=0x7f05002f;
+        public static final int summary_snooze=0x7f05002e;
+        public static final int summary_vibration=0x7f05002d;
+        /**  Summary 
+         */
+        public static final int summary_wakeupTime=0x7f05002b;
+        public static final int vibration=0x7f050020;
+        public static final int vibrationDefault=0x7f050003;
         /**  起床時刻のデフォルト 
          */
-        public static final int wakeupHourDefault=0x7f04001a;
-        public static final int wakeupMinuteDefault=0x7f04001b;
+        public static final int wakeupHourDefault=0x7f05001a;
+        public static final int wakeupMinuteDefault=0x7f05001b;
         /**  以下はメニュー。メニューの順番はmakeMenuList()で決める 
  0:TitleText 
  1:デフォルト値　有効とされているのは、「プレビュー」だけ
  2:text or check: text=TextViewで表示 check:CheckButtonを表示 roundmore:ImageButtonを表示
  3:詳細 
          */
-        public static final int wakeupTime=0x7f04001e;
+        public static final int wakeupTime=0x7f05001e;
+    }
+    public static final class xml {
+        public static final int main=0x7f040000;
     }
 }
