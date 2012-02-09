@@ -35,7 +35,6 @@ import android.util.Log;
 
 public class timerService extends Service {
 	private static final String TAG = "timerService";
-	private static  boolean debug = false;
 	
 	/* 定数 */
 	
@@ -83,8 +82,7 @@ public class timerService extends Service {
 	private final Intent wakeup_intent = new Intent(ACTION_WAKEUP);
 	private PendingIntent mAlarmSender = null;
 	/* アラーム音 */
-//	private RingtoneManager mRingtoneManager = null;
-//	private Ringtone mRingtone = null;
+
 	public final static int RINGTON_STREAMTYPE = RingtoneManager.TYPE_ALARM;
 	public final static int AUDIO_STREAMTYPE = AudioManager.STREAM_ALARM;
 	MediaPlayer mMediaPlayer = null;
@@ -232,8 +230,6 @@ public class timerService extends Service {
 			vabrationStart();
 			
 			// CalcActivityを呼び出す
-
-			// Activityをすでに起動してたら、新たには起動しない
 			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
 			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
 			ia.putExtra(CalcActivity.PREVIEW, false);
@@ -305,35 +301,21 @@ public class timerService extends Service {
 
 	private void alarmSetTime(int hour, int minute){
 		// Schedule the alarm!
-		// 0時を超えてないかったら、翌日
-		// 0時を過ぎてて、指定した時間の前だったら、その日
+		// 設定時刻より、現時刻が大きい値だったら、次の日にする
 		Calendar rightNow = Calendar.getInstance();
-		GregorianCalendar calendar;
-		calendar = new GregorianCalendar();
-		long currentTime = System.currentTimeMillis();
-		calendar.setTimeInMillis(currentTime);
-		if(debug == false){
-			if(rightNow.get(Calendar.HOUR_OF_DAY) == calendar.get(Calendar.HOUR_OF_DAY)){
-				calendar.add(Calendar.DATE, 1);
-			}
-			calendar.set(Calendar.HOUR_OF_DAY, hour);
-			calendar.set(Calendar.MINUTE, minute);
-			calendar.set(Calendar.SECOND, 0);
-		}
-		else {
-			calendar.set(Calendar.HOUR_OF_DAY, hour);
-			calendar.set(Calendar.MINUTE, minute);
-			calendar.set(Calendar.SECOND, 0);
-			if(calendar.getTimeInMillis() <= currentTime){
-				calendar.add(Calendar.DATE,1);
-			}
-			
+		Calendar setDate = Calendar.getInstance();
+		setDate.set(Calendar.HOUR_OF_DAY, hour);
+		setDate.set(Calendar.MINUTE, minute);
+		setDate.set(Calendar.SECOND, rightNow.get(Calendar.SECOND));		
+		if(rightNow.getTimeInMillis() > setDate.getTimeInMillis()){
+			setDate.add(Calendar.DATE, 1);
 		}
 		
-		Log.d(TAG,"setTime:"+calendar.get(Calendar.DAY_OF_MONTH)+ " " +calendar.get(Calendar.HOUR_OF_DAY)+":"+calendar.get(Calendar.MINUTE));
+
+		Log.d(TAG,"setTime:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
 		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
-		mAmWakeup.set(AlarmManager.RTC_WAKEUP,calendar.getTimeInMillis(),mAlarmSender);
+		mAmWakeup.set(AlarmManager.RTC_WAKEUP,setDate.getTimeInMillis(),mAlarmSender);
 
 	}
 	private void alarmSetCancel(){
