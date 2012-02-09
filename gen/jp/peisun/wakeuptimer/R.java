@@ -116,11 +116,8 @@ public final class R {
         public static final int wakeupMinuteDefault=0x7f04001b;
         /**  以下はメニュー。メニューの順番はmakeMenuList()で決める 
  0:TitleText 
- 1:デフォルト値
-    		テキストの場合もあるし、位置を示す場合もある。makeMenuList()でViewへの表示内容を決めるので、
-    		起床時刻とプレビューはあまり関係がない
-    	　	checkの場合はちゃんとチェックしている 
- 2:text or check: text=TextViewで表示 check:CheckButtonを表示 
+ 1:デフォルト値　有効とされているのは、「プレビュー」だけ
+ 2:text or check: text=TextViewで表示 check:CheckButtonを表示 roundmore:ImageButtonを表示
  3:詳細 
          */
         public static final int wakeupTime=0x7f04001e;
