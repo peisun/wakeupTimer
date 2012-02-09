@@ -377,7 +377,9 @@ public class timerService extends Service {
 		mMediaPlayer.start();
 	}
 	public void soundStop(){
-		mMediaPlayer.stop();
+		if(mMediaPlayer != null){
+			mMediaPlayer.stop();
+		}
 	}
 	private void vabrationStart(){
 		if(mConfig.mVabration){
