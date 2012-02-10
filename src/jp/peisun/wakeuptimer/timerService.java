@@ -168,7 +168,7 @@ public class timerService extends Service {
 			mConfig.mSnoozTime = intent.getLongExtra(SNOOZE, mConfig.mSnoozTime);
 			mConfig.mCalcRepeat = intent.getIntExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
 			mConfig.mLimitTime = intent.getLongExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
-			mConfig.mRingtonePosition = intent.getIntExtra(SOUND, mConfig.mRingtonePosition);
+			mConfig.mAlarmOn = intent.getBooleanExtra(SOUND, mConfig.mAlarmOn);
 			mConfig.mRingtonePath = intent.getStringExtra(SOUND_URI);
 			mConfig.mVabration = intent.getBooleanExtra(VIBRATION, mConfig.mVabration);
 			int hour = intent.getIntExtra(SET_HOUR, mConfig.hour);
@@ -182,10 +182,11 @@ public class timerService extends Service {
 			alarmSetTime(mConfig.hour,mConfig.minute);
 			
 			writeFile(mConfig);
+
+			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePosition= "+mConfig.mAlarmOn);
 			Log.d(TAG,"intent:"+SET_CONFIG+" time= "+mConfig.hour+":"+mConfig.minute);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mSnoozTime= "+mConfig.mSnoozTime);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mVabration= "+mConfig.mVabration);
-			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePosition= "+mConfig.mRingtonePosition);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePath"+mConfig.mRingtonePath);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mRepeat= "+mConfig.mCalcRepeat);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mLimittime= "+mConfig.mLimitTime);
@@ -194,8 +195,10 @@ public class timerService extends Service {
 		/* アラームの鳴動 */
 		else if(Action.equals(SOUND_PALY)){
 			Log.d(TAG,"intent:"+SOUND_PALY);
-			soundPlay(mConfig.mRingtonePosition);
+			
+			soundPlay(mConfig.mRingtonePath);
 			vabrationStart();
+			
 		}
 		/* アラームの停止 */
 		else if(Action.equals(SOUND_STOP)){
@@ -220,13 +223,14 @@ public class timerService extends Service {
 
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
+			if(mConfig.mAlarmOn ==true){
 			// 画面ロックを外す
 			returnFromSleep();
 			// アラームのキャンセル
 			alarmSetCancel();
 			
 			// アラームの鳴動
-			soundPlay(mConfig.mRingtonePosition);
+			soundPlay(mConfig.mRingtonePath);
 			vabrationStart();
 			
 			// CalcActivityを呼び出す
@@ -238,6 +242,7 @@ public class timerService extends Service {
     		Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
 			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			startActivity(ia);
+			}
 			
 			
 		}
@@ -325,12 +330,12 @@ public class timerService extends Service {
 	}
 	
 
-	public void soundPlay(int position){
+	public void soundPlay(String path){
 		mMediaPlayer = new MediaPlayer();
 		mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM);
 		RingtoneManager mRingtoneManager = new RingtoneManager(this);
 		mRingtoneManager.setType(RINGTON_STREAMTYPE);
-		Uri uri = mRingtoneManager.getRingtoneUri(position);
+		Uri uri = Uri.parse(path);
 		try {
 			mMediaPlayer.setDataSource(this, uri);
 		} catch (IllegalArgumentException e) {

@@ -4,21 +4,18 @@
     <string name="hello">Hello World, WakeupTimerActivity!</string>
     <string name="app_name">WakeupTimer</string>
     
-    <string name="vibrationDefault">true</string>
-    
    	<!-- 以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない -->
+   	<string name="menuAlarmOn">アラームON</string>
    	<string name="menuWakeup">起床時刻</string>
-   	<string name="menuAarlm">アラーム音</string>
+   	<string name="menuRingtone">アラーム音</string>
    	<string name="menuVibration">バイブレーション</string>
    	<string name="menuSnooze">スヌーズ時間の設定</string>
    	<string name="menuRepeat">計算問題数の設定</string>
    	<string name="menuLimittime">計算制限時間の設定</string>
    	<string name="menuPreview">プレビュー</string>
-   	<!-- 起床時刻のデフォルト -->
-   	<string name="wakeupHourDefault">06</string>
-   	<string name="wakeupMinuteDefault">30</string>
-    
+   	  
 	<!-- Preference -->
+	<string name="preference_alarmOn">alarmOn</string>
 	<string name="preference_wakeupTime">wakeupTime</string>
 	<string name="preference_ringtone">ringtone</string>
 	<string name="preference_vibration">vibrationCheck</string>
@@ -27,15 +24,24 @@
 	<string name="preference_limittime">limittime</string>
 	<string name="preference_preview">preview</string>
 	<!-- Summary -->
-	<string name="summary_wakeupTime">起床時間を設定します</string>
-    <string name="summary_alarm"></string>
+	<string name="summary_alarmOn_true">起床時間にアラームを鳴らして、計算問題を出題します</string>
+	<string name="summary_alarmOn_false">起床時間に静かにしています</string>
+    <string name="summary_wakeupTime">起床時間を設定します</string>
+    <string name="summary_ringtone"></string>
     <string name="summary_vibration_true">起床時間に震えます</string>
     <string name="summary_vibration_false">起床時間の振動はありません</string>
     <string name="summary_snooze">@string/snoozeTimeDefault</string>
     <string name="summary_repeat">@string/repeatDefault</string>
     <string name="summary_limitTime">@string/limittimeDefault</string>
     <string name="summary_preview">計算問題を試してみます</string>
-    
+    <!-- 起床時刻のデフォルト -->
+   	<string name="wakeupHourDefault">06</string>
+   	<string name="wakeupMinuteDefault">30</string>
+  
+    <!-- AarmOnのデフォルト -->
+    <string name="alarmOnDefaultValue">true</string>
+    <!-- バイブレーションのデフォルト -->
+    <string name="vibrationDefaultValue">true</string>
     <!-- スヌーズのデフォルト -->
     <string name="snoozeTimeDefault">5分</string>
     <string name="snoozeTimeDefaultValue">300000</string>

@@ -2,7 +2,7 @@ package jp.peisun.wakeuptimer;
 
 
 public class ConfigData  {
-	public int mRingtonePosition;
+	public boolean mAlarmOn;
 	public String mRingtonePath;
 	public boolean mVabration = true;
 	public int hour;

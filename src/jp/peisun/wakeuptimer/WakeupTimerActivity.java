@@ -17,6 +17,8 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -28,6 +30,7 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
+import android.preference.RingtonePreference;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,7 +61,15 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	
 	public ConfigData mConfig = null;
 
-
+	private Preference.OnPreferenceChangeListener  onPreferenceChangeListener_alarmOn =
+		new OnPreferenceChangeListener(){
+		@Override
+		public boolean onPreferenceChange(Preference preference, Object newValue) {
+			checkAlarmOn(preference,newValue);
+	        // 変更を適用するために true を返す  
+	        return true;
+		}
+	};
 	private Preference.OnPreferenceClickListener  onPreferenceClickListener_wakeupTime =
 		new OnPreferenceClickListener(){
 
@@ -141,25 +152,36 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         
         // 設定ファイルの
         readConfigData();
+        // アラームON
+        // キーを基に、リスト設定のインスタンスを取得する  
+        CharSequence cs = getText(R.string.preference_alarmOn);  
+        CheckBoxPreference cbp = (CheckBoxPreference)findPreference(cs);   
+        // リスナーを設定する  
+        cbp.setOnPreferenceChangeListener(onPreferenceChangeListener_alarmOn);
+        cbp.setChecked(mConfig.mAlarmOn);
+        
         // 起床時間
         // キーを基に、リスト設定のインスタンスを取得する  
-        CharSequence cs = getText(R.string.preference_wakeupTime);  
+        cs = getText(R.string.preference_wakeupTime);  
         Preference pref = (Preference)findPreference(cs);   
         // リスナーを設定する  
         pref.setOnPreferenceClickListener(onPreferenceClickListener_wakeupTime);
-        pref.setOnPreferenceChangeListener(onPreferenceChangeListener_wakeupTime);
-        
+        String summary = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
+        pref.setSummary(summary);
         
         // アラーム音
         cs = getText(R.string.preference_ringtone);  
-        pref = (Preference)findPreference(cs);
+        RingtonePreference rtp = (RingtonePreference)findPreference(cs);
         // リスナーを設定する  
-        pref.setOnPreferenceChangeListener(onPreferenceChangeListener_ringtone);
-        
+        rtp.setOnPreferenceChangeListener(onPreferenceChangeListener_ringtone);
+        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        Ringtone ringtone = RingtoneManager.getRingtone(this, uri);  
+        rtp.setSummary(ringtone.getTitle(this));
+		
         
         // バイブレーション
         cs = getText(R.string.preference_vibration);  
-        CheckBoxPreference cbp = (CheckBoxPreference)findPreference(cs);  
+        cbp = (CheckBoxPreference)findPreference(cs);  
         cbp.setChecked(mConfig.mVabration);
         // リスナーを設定する  
         cbp.setOnPreferenceChangeListener(onPreferenceChangeListener_vibration);  
@@ -167,7 +189,9 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         // スヌーズ	
         cs = getText(R.string.preference_snooze);  
         ListPreference lp = (ListPreference)findPreference(cs);
-        lp.setDefaultValue(mConfig.mSnoozTime);
+        summary = SummaryfindById(R.array.entries_snooze,R.array.entryvalue_snooze,mConfig.mSnoozTime);
+        lp.setSummary(summary);
+        lp.setDefaultValue((Object)String.format("%d", mConfig.mSnoozTime));
         // リスナーを設定する  
         lp.setOnPreferenceChangeListener(onPreferenceChangeListener_snooze);
         
@@ -207,7 +231,19 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	protected void onResume(){
 		super.onResume();
 	}
-
+	private String SummaryfindById(int id,int valueid,long value){
+		String[] entries = getResources().getStringArray(id);
+		String[] entryValue = getResources().getStringArray(valueid);
+	    
+	    final String valueString = String.format("%d",value);
+	    int i;
+	    for (i = 0; i < entryValue.length; i++) {
+	    	if(valueString.equals(entryValue[i])){
+	    		break;
+	    	}
+	    }
+	    return (String)entries[i];
+	}
 	private void readConfigData()  {
 		// TODO 自動生成されたメソッド・スタブ
 		InputStream is = null;
@@ -237,30 +273,48 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	private ConfigData setDefaultValue(){
 		ConfigData config = new ConfigData();
 		
+		config.mAlarmOn = Boolean.getBoolean(getString(R.string.alarmOnDefaultValue));
 		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
 		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
 		
-		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefault));
+		config.mSnoozTime = Long.parseLong(getString(R.string.snoozeTimeDefaultValue));
 		
-		config.mLimitTime = Long.parseLong(getString(R.string.limittimeDefault));
+		config.mLimitTime = Long.parseLong(getString(R.string.limittimeDefaultValue));
 				
 		config.mCalcRepeat = Integer.parseInt(getString(R.string.repeatDefaultValue));
 		
-//		config.mRingtonePath = Integer.parseInt(getString(R.string.selectAlarmDefaultIndex));
+		Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
+		config.mRingtonePath = ringtone.getTitle(this);
 		
-		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefault));
+		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefaultValue));
 		return config;
 	}
-
+    private void checkAlarmOn(Preference preference, Object newValue){
+		String summary;  
+        if (((Boolean)newValue).booleanValue()) {  
+        	mConfig.mAlarmOn = true;
+        	summary = getString(R.string.summary_alarmOn_true);
+        }
+        else {
+        	mConfig.mAlarmOn = false;
+        	summary = getString(R.string.summary_alarmOn_false);
+        }
+        preference.setSummary(summary);
+        sendSetConfigIntent(mConfig);
+    }
     private void checkVibration(Preference preference, Object newValue){
 		String summary;  
         if (((Boolean)newValue).booleanValue()) {  
-            summary = getString(R.string.summary_vibration_true);  
+            summary = getString(R.string.summary_vibration_true);
+            mConfig.mVabration = true;
         } else {  
-            summary = getString(R.string.summary_vibration_false);    
+            summary = getString(R.string.summary_vibration_false); 
+            mConfig.mVabration = false;
         }  
         // 要約を変更する  
         ((CheckBoxPreference)preference).setSummary(summary); 
+        sendSetConfigIntent(mConfig);
     }
     private void selectRingtoneDialog(Preference preference, Object newValue){
     	String url = (String)newValue;  
@@ -270,6 +324,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
             preference.setSummary("サイレント");  
         } else {  
             uri = Uri.parse(url);  
+            
             ringtone = RingtoneManager.getRingtone(this, uri);  
             preference.setSummary(ringtone.getTitle(this)); 
             mConfig.mRingtonePath = uri.toString();
@@ -277,46 +332,47 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         } 
     }
 	private void selectSnoozeDialog(Preference preference, Object newValue){
-		ListPreference listpref =(ListPreference)preference;  
-        String summary = listpref.getEntry().toString();
-        preference.setSummary(summary); 
-        mConfig.mSnoozTime = Long.parseLong(newValue.toString());
+		ListPreference listpref =(ListPreference)preference;
+		mConfig.mSnoozTime = Long.parseLong(newValue.toString());
+        String summary = SummaryfindById(R.array.entries_snooze,R.array.entryvalue_snooze,mConfig.mSnoozTime);
+        listpref.setSummary(summary); 
+        
         sendSetConfigIntent(mConfig);
 	}
 
 	private void selectLimitTimeDialog(Preference preference, Object newValue){
-
-		ListPreference listpref = (ListPreference)preference;
-		String summary =   listpref.getEntry().toString();
-		listpref.setSummary(summary);
 		mConfig.mLimitTime = Long.parseLong(newValue.toString());
+		ListPreference listpref = (ListPreference)preference;
+		String summary = SummaryfindById(R.array.entries_limittime,R.array.entryvalue_limittime,mConfig.mLimitTime);
+		listpref.setSummary(summary);
+		
 		sendSetConfigIntent(mConfig);
 		
 	}
 	private void selectRepeatDialog(Preference preference, Object newValue){
+		mConfig.mCalcRepeat = Integer.parseInt(newValue.toString());
 		ListPreference listpref = (ListPreference)preference;
-		String summary = listpref.getEntry().toString();
+		String summary = SummaryfindById(R.array.entries_repeat,R.array.entryvalue_repeat,mConfig.mCalcRepeat);
 		listpref.setSummary(summary);
-		mConfig.mCalcRepeat = Integer.parseInt(newValue.toString()); 
+		 
 		sendSetConfigIntent(mConfig);
 		
 	}
-    public void selectTimeDialog(Preference pref){
+    public void selectTimeDialog(Preference preference){
     	Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
-        int layoutId = pref.getLayoutResource();
-        final View layoutview = (View)findViewById(layoutId);
+        final Preference pref = (Preference)preference;
+        
     	
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
         		new TimePickerDialog.OnTimeSetListener() {
 			@Override
         	public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-				String time = String.format("%02d:%02d", hourOfDay,minute);
-				TextView textView = (TextView)layoutview.findViewById(R.id.PreferenceValuetextView);
-				textView.setText(time);
 				mConfig.hour = hourOfDay;
 				mConfig.minute = minute;
+				String summary = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
+				pref.setSummary(summary);
 				sendSetConfigIntent(mConfig);
         	}
         }, hour, minute, true);
