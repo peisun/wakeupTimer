@@ -95,10 +95,11 @@ public final class R {
          */
         public static final int menuWakeup=0x7f050013;
         public static final int preference_limittime=0x7f05002a;
+        public static final int preference_preview=0x7f05002b;
+        public static final int preference_repeat=0x7f050029;
         public static final int preference_ringtone=0x7f050026;
         public static final int preference_snooze=0x7f050028;
         public static final int preference_vibration=0x7f050027;
-        public static final int preference_vrepeat=0x7f050029;
         /**  Preference 
          */
         public static final int preference_wakeupTime=0x7f050025;
@@ -118,15 +119,15 @@ public final class R {
         /**  以下はスヌーズ時間 
          */
         public static final int snoozeTimeText=0x7f050004;
-        public static final int summary_alarm=0x7f05002c;
-        public static final int summary_limitTime=0x7f050030;
-        public static final int summary_preview=0x7f050031;
-        public static final int summary_repeat=0x7f05002f;
-        public static final int summary_snooze=0x7f05002e;
-        public static final int summary_vibration=0x7f05002d;
+        public static final int summary_alarm=0x7f05002d;
+        public static final int summary_limitTime=0x7f050031;
+        public static final int summary_preview=0x7f050032;
+        public static final int summary_repeat=0x7f050030;
+        public static final int summary_snooze=0x7f05002f;
+        public static final int summary_vibration=0x7f05002e;
         /**  Summary 
          */
-        public static final int summary_wakeupTime=0x7f05002b;
+        public static final int summary_wakeupTime=0x7f05002c;
         public static final int vibration=0x7f050020;
         public static final int vibrationDefault=0x7f050003;
         /**  起床時刻のデフォルト 

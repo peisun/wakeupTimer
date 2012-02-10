@@ -56,8 +56,9 @@
 	<string name="preference_ringtone">ringtone</string>
 	<string name="preference_vibration">vibrationCheck</string>
 	<string name="preference_snooze">snooze</string>
-	<string name="preference_vrepeat">repeat</string>
+	<string name="preference_repeat">repeat</string>
 	<string name="preference_limittime">limittime</string>
+	<string name="preference_preview">preview</string>
 	<!-- Summary -->
 	<string name="summary_wakeupTime">起床時間を設定します</string>
     <string name="summary_alarm"></string>

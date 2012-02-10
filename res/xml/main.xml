@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    <Preference android:title="@string/menuWakeup" android:summary="@string/summary_wakeupTime" android:key="@string/preference_wakeupTime" android:selectable="true" android:widgetLayout="@layout/menu_row"/><RingtonePreference />
-    <CheckBoxPreference />
+    <Preference android:title="@string/menuWakeup" android:summary="@string/summary_wakeupTime" android:key="@string/preference_wakeupTime" android:selectable="true" android:widgetLayout="@layout/menu_row"/><RingtonePreference android:title="@string/menuAarlm" android:key="@string/preference_ringtone" android:summary="@string/summary_alarm"/>
+    <CheckBoxPreference android:key="@string/preference_vibration" android:summary="@string/summary_vibration" android:title="@string/menuVibration"/>
     
     
-    <Preference />
-    <Preference />
-    <Preference />
+    <Preference android:key="@string/preference_snooze" android:title="@string/menuSnooze" android:summary="@string/summary_snooze"/>
+    <Preference android:key="@string/preference_repeat" android:title="@string/menuRepeat" android:summary="@string/summary_repeat"/>
+    <Preference android:key="@string/preference_limittime" android:title="@string/menuLimittime" android:summary="@string/summary_limitTime"/>
+    <Preference android:key="@string/preference_preview" android:title="@string/menuPreview" android:summary="@string/summary_preview"/>
 
     
 
