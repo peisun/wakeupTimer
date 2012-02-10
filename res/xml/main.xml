@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-    <Preference android:title="@string/menuWakeup" android:summary="@string/summary_wakeupTime" android:key="@string/preference_wakeupTime" android:selectable="true" android:widgetLayout="@layout/menu_row"/><RingtonePreference android:title="@string/menuAarlm" android:key="@string/preference_ringtone" android:summary="@string/summary_alarm"/>
-    <CheckBoxPreference android:key="@string/preference_vibration" android:summary="@string/summary_vibration" android:title="@string/menuVibration"/>
-    
-    
-    <Preference android:key="@string/preference_snooze" android:title="@string/menuSnooze" android:summary="@string/summary_snooze"/>
-    <Preference android:key="@string/preference_repeat" android:title="@string/menuRepeat" android:summary="@string/summary_repeat"/>
-    <Preference android:key="@string/preference_limittime" android:title="@string/menuLimittime" android:summary="@string/summary_limitTime"/>
-    <Preference android:key="@string/preference_preview" android:title="@string/menuPreview" android:summary="@string/summary_preview"/>
-
-    
-
+    <Preference android:title="@string/menuWakeup" android:summary="@string/summary_wakeupTime" android:key="@string/preference_wakeupTime" android:selectable="true" android:widgetLayout="@layout/preference_row"/><RingtonePreference android:title="@string/menuAarlm" android:key="@string/preference_ringtone" android:summary="@string/summary_alarm" android:showDefault="true" android:ringtoneType="alarm" android:showSilent="false"/>
+    <CheckBoxPreference android:key="@string/preference_vibration" android:summary="@string/summary_vibration_true" android:title="@string/menuVibration" android:ringtoneType="alarm" android:disableDependentsState="true" android:enabled="true"/>
+    <ListPreference android:key="@string/preference_snooze" android:title="@string/menuSnooze" android:summary="@string/summary_snooze" android:selectable="true" android:dialogTitle="@string/menuSnooze" android:entryValues="@array/entryvalue_snooze" android:entries="@array/entries_snooze" android:defaultValue="@string/snoozeTimeDefaultValue"/>
+    <ListPreference android:key="@string/preference_repeat" android:title="@string/menuRepeat" android:summary="@string/summary_repeat" android:selectable="true" android:entryValues="@array/entryvalue_repeat" android:entries="@array/entries_repeat" android:defaultValue="@string/repeatDefaultValue"/>
+    <ListPreference android:key="@string/preference_limittime" android:title="@string/menuLimittime" android:summary="@string/summary_limitTime" android:entryValues="@array/entryvalue_limittime" android:entries="@array/entries_limittime" android:selectable="true" android:defaultValue="@string/limittimeDefault"/>
+    <Preference android:key="@string/preference_preview" android:title="@string/menuPreview" android:summary="@string/summary_preview" android:selectable="true" android:enabled="true"/>
 </PreferenceScreen>

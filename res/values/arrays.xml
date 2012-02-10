@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string-array name="entries_snooze">  
+ <item>@string/snoozeTimeDefault</item>  
+ <item>10分</item>  
+ <item>15分</item>  
+</string-array> 
+<string-array name="entryvalue_snooze">  
+ <item>@string/snoozeTimeDefaultValue</item>  
+ <item>600000</item>  
+ <item>900000</item>  
+</string-array>     
+<string-array name="entries_repeat">  
+ <item>@string/repeatDefault</item>  
+ <item>5問</item>  
+ <item>10問</item>
+ <item>ランダム</item>  
+</string-array> 
+<string-array name="entryvalue_repeat">  
+ <item>@string/repeatDefaultValue</item>  
+ <item>5</item>  
+ <item>10</item>
+ <item>-1</item>  
+</string-array>  
+<string-array name="entries_limittime">  
+ <item>@string/limittimeDefault</item>  
+ <item>60秒</item>  
+ <item>90秒</item>
+ <item>120秒</item>  
+</string-array> 
+<string-array name="entryvalue_limittime">  
+ <item>@string/limittimeDefaultValue</item>  
+ <item>60000</item>  
+ <item>90000</item>
+ <item>120000</item>  
+</string-array>        
+</resources>
