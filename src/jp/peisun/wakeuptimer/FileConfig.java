@@ -40,6 +40,7 @@ public class FileConfig {
 
 			sl.startTag("", tag_alarmon);
 			sl.text(Boolean.toString(config.mAlarmOn));
+			Log.d(TAG,"FileConfig.write " + Boolean.toString(config.mAlarmOn));
 			sl.endTag("", tag_alarmon);
 			sl.text("\n");
 			
@@ -127,7 +128,8 @@ public class FileConfig {
 							config.minute = mSetMinute;
 						}
 						else if(end_tag.equals(tag_alarmon)){
-							config.mAlarmOn = Boolean.getBoolean(element);
+							config.mAlarmOn = Boolean.parseBoolean(element);
+							Log.d(TAG,"FileConfig.read "+ config.mAlarmOn);
 						}
 						else if(end_tag.equals(tag_ringtonepath)){
 							config.mRingtonePath = element;

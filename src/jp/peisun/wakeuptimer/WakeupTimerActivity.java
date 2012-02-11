@@ -282,7 +282,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	private ConfigData setDefaultValue(){
 		ConfigData config = new ConfigData();
 		
-		config.mAlarmOn = Boolean.getBoolean(getString(R.string.alarmOnDefaultValue));
+		config.mAlarmOn = Boolean.parseBoolean(getString(R.string.alarmOnDefaultValue));
 		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
 		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
 		
