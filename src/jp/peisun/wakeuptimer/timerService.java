@@ -183,7 +183,7 @@ public class timerService extends Service {
 			
 			writeFile(mConfig);
 
-			Log.d(TAG,"intent:"+SET_CONFIG+" mRingtonePosition= "+mConfig.mAlarmOn);
+			Log.d(TAG,"intent:"+SET_CONFIG+" mAlarmOn= "+mConfig.mAlarmOn);
 			Log.d(TAG,"intent:"+SET_CONFIG+" time= "+mConfig.hour+":"+mConfig.minute);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mSnoozTime= "+mConfig.mSnoozTime);
 			Log.d(TAG,"intent:"+SET_CONFIG+" mVabration= "+mConfig.mVabration);
@@ -365,7 +365,9 @@ public class timerService extends Service {
 	}
 	public void soundStop(){
 		if(mMediaPlayer != null){
-			mMediaPlayer.stop();
+			if(mMediaPlayer.isPlaying() == true){
+				mMediaPlayer.stop();
+			}
 		}
 	}
 	private void vabrationStart(){

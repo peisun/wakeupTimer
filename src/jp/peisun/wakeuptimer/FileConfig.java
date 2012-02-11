@@ -129,7 +129,7 @@ public class FileConfig {
 						else if(end_tag.equals(tag_alarmon)){
 							config.mAlarmOn = Boolean.getBoolean(element);
 						}
-						else if(end_tag.equals(tag_alarmon)){
+						else if(end_tag.equals(tag_ringtonepath)){
 							config.mRingtonePath = element;
 						}
 						else if(end_tag.equals(tag_vibration)){

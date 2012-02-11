@@ -177,6 +177,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
         Ringtone ringtone = RingtoneManager.getRingtone(this, uri);  
         rtp.setSummary(ringtone.getTitle(this));
+//        rtp.setSummary(mConfig.mRingtonePath);
 		
         
         // バイブレーション
@@ -185,6 +186,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         cbp.setChecked(mConfig.mVabration);
         // リスナーを設定する  
         cbp.setOnPreferenceChangeListener(onPreferenceChangeListener_vibration);  
+        cbp.setChecked(mConfig.mVabration);
         
         // スヌーズ	
         cs = getText(R.string.preference_snooze);  
@@ -200,13 +202,16 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         lp = (ListPreference)findPreference(cs);
         // リスナーを設定する  
         lp.setOnPreferenceChangeListener(onPreferenceChangeListener_repeat);
+        summary = SummaryfindById(R.array.entries_repeat,R.array.entryvalue_repeat,mConfig.mCalcRepeat);
+        lp.setSummary(summary);
         
         // 制限時間
         cs = getText(R.string.preference_limittime);  
         lp = (ListPreference)findPreference(cs);
         // リスナーを設定する  
         lp.setOnPreferenceChangeListener(onPreferenceChangeListener_limittime);
-        
+        summary = SummaryfindById(R.array.entries_limittime,R.array.entryvalue_limittime,mConfig.mLimitTime);
+        lp.setSummary(summary);
         // プレビュー
         cs = getText(R.string.preference_preview);  
         pref = (Preference)findPreference(cs);   
@@ -251,6 +256,8 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
 		File file = new File(filepath);
 		
+		if(file.exists() == true){
+		
 		try {
 			is = new FileInputStream(file);
 		
@@ -265,8 +272,10 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		} catch (IOException e){
 			e.printStackTrace();
 		}
-		sendSetConfigIntent(mConfig);
-		
+		}
+		else {
+			mConfig = setDefaultValue();
+		}
 		
 	}
 
@@ -386,7 +395,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
     	
     	Intent intent = new Intent(timerService.SET_CONFIG);
     	
-    	
+    	intent.putExtra(timerService.SOUND, config.mAlarmOn);
     	intent.putExtra(timerService.SET_HOUR, config.hour);
     	intent.putExtra(timerService.SET_MINUTE, config.minute);
     	intent.putExtra(timerService.SNOOZE, config.mSnoozTime);
