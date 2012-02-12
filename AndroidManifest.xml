@@ -21,9 +21,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
                 
             </intent-filter>
-            <intent-filter >
-                <action android:name="jp.peisun.wakeupTimer.intent.config"/>
-            </intent-filter>
             
         </activity>
         <activity 

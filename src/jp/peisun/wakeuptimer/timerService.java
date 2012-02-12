@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Handler;
@@ -35,9 +36,9 @@ import android.util.Log;
 
 public class timerService extends Service {
 	private static final String TAG = "timerService";
-	
+
 	/* 定数 */
-	
+
 	/* ファイル名 */
 	public static final String  FILE_SETTIME = "setTime";
 	/*
@@ -53,7 +54,7 @@ public class timerService extends Service {
 	public static final String ACTION_FINISH = "jp.peisun.wakeupTimer.intent.finish";
 	public static final String SET_CONFIG = "jp.peisun.wakeupTimer.intent.setconfig";
 	public static final String FORCE_FINISH = "jp.peisun.wakeupTimer.intent.force";
-	
+
 	/*
 	 * インテント引数
 	 */
@@ -64,17 +65,17 @@ public class timerService extends Service {
 	public static final String SOUND_URI = "ringtonepath";
 	public static final String VIBRATION = "vibration";
 	public static final String CONFIG = "config";
-	
+
 	/*
 	 * Alarmを再設定するまでの時間稼ぎ
 	 */
 	private static final long DELAY_TIME = 60*1000; // 60秒
 	private static final int MSG = 1;
 	private WaitHandler mWaitHandler = new WaitHandler();
-	
+
 	private ConfigData mConfig = new ConfigData();
-	
-	
+
+
 	/*
 	 * 起床時間のアラーム関連
 	 */
@@ -90,17 +91,17 @@ public class timerService extends Service {
 	private Vibrator vibrator=null;
 	// 0秒後に3秒振動、1秒待って3秒振動、1秒待って3秒振動...
 	private final long[] pattern = {0,3000, 1000, 3000, 1000, 3000, 1000}; // OFF/ON/OFF/ON/OFF...
-	
+
 	/*
 	 * スヌーズのアラーム関連
 	 */
 	private AlarmManager mAmSnooze = null;
 	private PendingIntent mSnoozSender = null;
-	
+
 	/* 画面ロック解除 */
 	private PowerManager.WakeLock mWakeLock;
 	private KeyguardLock keylock;
-	
+
 	/*
 	 * Activityの状態
 	 */
@@ -114,7 +115,7 @@ public class timerService extends Service {
 	@Override
 	public void onCreate() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 		super.onCreate();
 	}
 	@Override
@@ -129,19 +130,20 @@ public class timerService extends Service {
 		String Action;
 		if (intent != null) {
 			Action = intent.getAction();
-			
+
 		} else {
 			Action = "";
 		}
 		/* Boot時の設定 */
 		if(Action.equals(BOOT_ACTION)){
 			Log.d(TAG,"intent:"+BOOT_ACTION);
-				
-				InputStream is=null;
-				// ファイルから起床時間を読み出し設定する
 
-				String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;
-				File file = new File(filepath);
+			InputStream is=null;
+			// ファイルから起床時間を読み出し設定する
+
+			String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;
+			File file = new File(filepath);
+			if(file.exists() == true){
 				try {
 					is = new FileInputStream(file);
 					mConfig = FileConfig.readConfig(is);
@@ -150,7 +152,7 @@ public class timerService extends Service {
 					stopSelf();
 
 				}
-				
+
 				try {
 					if(is != null ){
 						is.close();
@@ -159,9 +161,14 @@ public class timerService extends Service {
 					// TODO 自動生成された catch ブロック
 					e.printStackTrace();
 				}
+			}
+			else {
+				// ファイルがなかったら、何もしないで終了する。たぶん、礼儀。
+				stopSelf();
+			}
 
-				alarmSetTime(mConfig.hour,mConfig.minute);
-				
+			alarmSetTime(mConfig.hour,mConfig.minute);
+
 		}
 		else if(Action.equals(SET_CONFIG)){
 
@@ -180,7 +187,7 @@ public class timerService extends Service {
 				mConfig.minute = minute;
 			}
 			alarmSetTime(mConfig.hour,mConfig.minute);
-			
+
 			writeFile(mConfig);
 
 			Log.d(TAG,"intent:"+SET_CONFIG+" mAlarmOn= "+mConfig.mAlarmOn);
@@ -195,10 +202,10 @@ public class timerService extends Service {
 		/* アラームの鳴動 */
 		else if(Action.equals(SOUND_PALY)){
 			Log.d(TAG,"intent:"+SOUND_PALY);
-			
+
 			soundPlay(mConfig.mRingtonePath);
 			vabrationStart();
-			
+
 		}
 		/* アラームの停止 */
 		else if(Action.equals(SOUND_STOP)){
@@ -213,7 +220,7 @@ public class timerService extends Service {
 			releaseWakelock();
 			startSnooze(mConfig.mSnoozTime);
 		}
-		
+
 		/* スヌーズのキャンセル */
 		else if(Action.equals(SNOOZE_CANCEL)){
 			Log.d(TAG,"intent:"+SNOOZE_CANCEL);
@@ -224,27 +231,27 @@ public class timerService extends Service {
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
 			if(mConfig.mAlarmOn ==true){
-			// 画面ロックを外す
-			returnFromSleep();
-			// アラームのキャンセル
-			alarmSetCancel();
-			
-			// アラームの鳴動
-			soundPlay(mConfig.mRingtonePath);
-			vabrationStart();
-			
-			// CalcActivityを呼び出す
-			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
-			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
-			ia.putExtra(CalcActivity.PREVIEW, false);
-    		ia.putExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
-    		ia.putExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
-    		Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
-			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			startActivity(ia);
+				// 画面ロックを外す
+				returnFromSleep();
+				// アラームのキャンセル
+				alarmSetCancel();
+
+				// アラームの鳴動
+				soundPlay(mConfig.mRingtonePath);
+				vabrationStart();
+
+				// CalcActivityを呼び出す
+				Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
+				ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
+				ia.putExtra(CalcActivity.PREVIEW, false);
+				ia.putExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
+				ia.putExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
+				Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
+				ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(ia);
 			}
-			
-			
+
+
 		}
 		else if(Action.equals(ACTION_FINISH)){
 			mWaitHandler.sleep();
@@ -260,7 +267,7 @@ public class timerService extends Service {
 		return START_STICKY;
 		// super.onStartCommand(intent, flags, startId);
 	}
-	
+
 
 	private void writeFile(ConfigData config){
 		OutputStream os = null;
@@ -276,12 +283,12 @@ public class timerService extends Service {
 		} catch (Exception e){
 			e.printStackTrace();
 		}
-		
+
 	}
 	private void returnFromSleep(){
 		// PowerManagerを取得する
 		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		
+
 		// スクリーンが暗いままならlockを解除する
 		if(pm.isScreenOn()==false){
 			//スリープ状態から復帰する
@@ -301,7 +308,7 @@ public class timerService extends Service {
 			mWakeLock.release();
 			mWakeLock = null;
 		}
-		
+
 	}
 
 	private void alarmSetTime(int hour, int minute){
@@ -315,7 +322,7 @@ public class timerService extends Service {
 		if(rightNow.getTimeInMillis() > setDate.getTimeInMillis()){
 			setDate.add(Calendar.DATE, 1);
 		}
-		
+
 
 		Log.d(TAG,"setTime:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
 		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
@@ -328,7 +335,7 @@ public class timerService extends Service {
 			mAmWakeup.cancel(mAlarmSender);
 		}
 	}
-	
+
 
 	public void soundPlay(String path){
 		mMediaPlayer = new MediaPlayer();
@@ -385,7 +392,7 @@ public class timerService extends Service {
 	}
 	class WaitHandler extends Handler {
 		@Override
-        public void handleMessage(Message msg) {
+		public void handleMessage(Message msg) {
 			alarmSetTime(mConfig.hour,mConfig.minute);
 		}
 		public void sleep(){
@@ -397,18 +404,18 @@ public class timerService extends Service {
 	 * スヌーズの為のAlarmをセット
 	 */
 	private void startSnooze(long snooze_time){
-		 
+
 		long snooze = System.currentTimeMillis() + mConfig.mSnoozTime;
 
 		Log.d(TAG,"Snooze Set");
 		mSnoozSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
 		mAmSnooze.set(AlarmManager.RTC_WAKEUP,snooze,mSnoozSender);
-		
+
 	}
 	private void cancelSnooze(){
 		if(mAmSnooze != null){
-		mAmSnooze.cancel(mSnoozSender);
+			mAmSnooze.cancel(mSnoozSender);
 		}
 	}
 }
