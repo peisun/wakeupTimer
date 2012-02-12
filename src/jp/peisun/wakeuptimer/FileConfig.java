@@ -57,6 +57,7 @@ public class FileConfig {
 			else {
 				sl.text(config.mRingtonePath);
 			}
+			Log.d(TAG,"mRingtonePath " + config.mRingtonePath);
 			sl.endTag("", tag_ringtonepath);
 			sl.text("\n");
 

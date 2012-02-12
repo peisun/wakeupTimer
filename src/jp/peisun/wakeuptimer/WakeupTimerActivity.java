@@ -174,9 +174,16 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         RingtonePreference rtp = (RingtonePreference)findPreference(cs);
         // リスナーを設定する  
         rtp.setOnPreferenceChangeListener(onPreferenceChangeListener_ringtone);
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        Ringtone ringtone = RingtoneManager.getRingtone(this, uri);  
+        Uri uri;
+        if(mConfig.mRingtonePath.equals("")){
+        	uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        }
+        else {
+        	uri = Uri.parse(mConfig.mRingtonePath);
+        }
+        Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
         rtp.setSummary(ringtone.getTitle(this));
+        Log.d(TAG,"Ringtone " + ringtone.getTitle(this));
 //        rtp.setSummary(mConfig.mRingtonePath);
 		
         
