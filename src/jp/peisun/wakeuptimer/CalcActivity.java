@@ -55,6 +55,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private int creatAnswer = 0;
 	private int mRepeat = 0;
 	private long mLimitTime = 0;
+	private boolean isCalc = true;
 
 	private AlertDialog mAlertFinish;
 	@Override
@@ -317,6 +318,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 					// カウントダウンでアラームがなるので
 					// スヌーズをかける必要はない
 				}
+
 				startCountDown();
 				arg0.dismiss();
 			}
@@ -376,6 +378,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 					Intent intent = new Intent(timerService.ACTION_FINISH);
 					startService(intent);
 				}
+				else {
+					isCalc = false;
+				}
 				dialog.dismiss();
 				finish();
 			}
@@ -408,9 +413,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		// Backキーが押されたらActivityは死ぬ
 		// 計算を拒否したことになり、スヌーズをかける
-		if(!preview){
+		if(preview){
+			// プレビューの場合は何もしない
+		}
+		else if(isCalc == true){
+			// 計算中だったらスヌーズをかける
 			stopCountDown();	
 			sendSnoozeStartIntent();
+		}
+		else {
+			// 計算が終わっていたら
+			stopCountDown();
+			sendSnoozeCancelIntent();
 		}
 		finish();
 		super.onBackPressed();
@@ -420,9 +434,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		// Activityが他のアプリにより、バックグランドに入ろうとする
 		// この場合も計算を拒否したこととなり、スヌーズをかける
-		if(!preview){
-			stopCountDown();
+		if(preview){
+			//プレビューの場合は何もしない
+		}
+		else if(isCalc == true){
+			// 計算中だったらスヌーズをかける
+			stopCountDown();	
 			sendSnoozeStartIntent();
+		}
+		else {
+			// 計算が終わっていたら
+			stopCountDown();
+			sendSnoozeCancelIntent();
 		}
 		finish();
 		super.onUserLeaveHint();
