@@ -181,12 +181,13 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         rtp.setOnPreferenceChangeListener(onPreferenceChangeListener_ringtone);
         Uri uri;
         if(mConfig.mRingtonePath.equals("")){
-        	uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        	uri = RingtoneManager.getDefaultUri(timerService.RINGTON_STREAMTYPE);
         }
         else {
         	uri = Uri.parse(mConfig.mRingtonePath);
         }
         Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
+        rtp.setDefaultValue(ringtone.getTitle(this));
         rtp.setSummary(ringtone.getTitle(this));
 		
         
