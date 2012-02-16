@@ -256,8 +256,11 @@ public class timerService extends Service {
 
 		}
 		else if(Action.equals(ACTION_FINISH)){
-			mWaitHandler.sleep();
 			cancelSnooze();
+			
+			// アラームをセットした1分以内だと、またアラームが起動してしまう。
+			// alarmSetTimeの不具合かもしれないけど、ちょっとわからない
+			mWaitHandler.sleep();
 		}
 		else if(Action.equals(FORCE_FINISH)){
 			// デバッグ時の隠しintent。面倒になってサービスを止めるときに使う
@@ -325,49 +328,20 @@ public class timerService extends Service {
 			setDate.add(Calendar.DATE, 1);
 		}
 		setDate.set(Calendar.SECOND, 0);
+		setDate.set(Calendar.MILLISECOND,0);
 
 		Log.d(TAG,"setTime:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
 		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,setDate.getTimeInMillis(),mAlarmSender);
 		
-		
-//		String message = String.format("次回アラームは%d日の%02d:%02dにセットされました。", 
-//				setDate.get(Calendar.DAY_OF_MONTH),mConfig.hour	,mConfig.minute);
-//		AlertDialog.Builder mNextAlarmDlg = new AlertDialog.Builder(this);
-//		mNextAlarmDlg.setTitle("TEST");
-//		mNextAlarmDlg.setMessage(message);
-//		
-//		mNextAlarmDlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
-//			@Override
-//			public void onClick(DialogInterface dialog, int which) {
-//				// TODO 自動生成されたメソッド・スタブ
-//			}
-//			
-//		});
-//		mNextAlarmDlg.create();
-//		mNextAlarmDlg.show();
-//		AlertDialog alertDialog = mNextAlarmDlg.create();
-//        // アラートダイアログを表示します
-//        alertDialog.show();
-		
-		
-//		Intent intent = new Intent(WakeupTimerActivity.SET_ALARM);
-//		intent.putExtra(WakeupTimerActivity.SET_ALARM_DAY, setDate.get(Calendar.DATE));
-//		intent.putExtra(WakeupTimerActivity.SET_ALARM_HOUR, setDate.get(Calendar.HOUR_OF_DAY));
-//		intent.putExtra(WakeupTimerActivity.SET_ALARM_MINUTE,setDate.get(Calendar.MINUTE));
-//		startActivity(intent);
-		
-
 	}
 	private void alarmSetCancel(){
 		if(mAmWakeup!=null){
 			mAmWakeup.cancel(mAlarmSender);
 		}
 	}
-	private void showDialog(){
-		
-	}
+
 
 	public void soundPlay(String path){
 		mMediaPlayer = new MediaPlayer();
