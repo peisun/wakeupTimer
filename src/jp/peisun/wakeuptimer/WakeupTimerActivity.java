@@ -340,16 +340,14 @@ public class WakeupTimerActivity extends PreferenceActivity  {
     	String url = (String)newValue;  
         Uri uri;  
         Ringtone ringtone;  
-        if ("".equals(url)) {  
-            preference.setSummary("サイレント");  
-        } else {  
-            uri = Uri.parse(url);  
-            
-            ringtone = RingtoneManager.getRingtone(this, uri);  
-            preference.setSummary(ringtone.getTitle(this)); 
-            mConfig.mRingtonePath = uri.toString();
-            sendSetConfigIntent(mConfig);
-        } 
+
+        uri = Uri.parse(url);  
+
+        ringtone = RingtoneManager.getRingtone(this, uri);  
+        preference.setSummary(ringtone.getTitle(this)); 
+        mConfig.mRingtonePath = uri.toString();
+        sendSetConfigIntent(mConfig);
+
     }
 	private void selectSnoozeDialog(Preference preference, Object newValue){
 		ListPreference listpref =(ListPreference)preference;

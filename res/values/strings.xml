@@ -6,7 +6,12 @@
     <!-- CalcActivityでのメッセージ -->
     <string name="answer_currect">正解です</string>
     <string name="answer_mistake">間違いです</string>
+    <string name="next_message">次です</string>
     <string name="preview_dialog_title">プレビューを終わります</string>
+    
+    <!--  -->
+    <string name="wakeup_message">起きましたか？</string>
+    <string name="start_message">計算を開始します</string>
    	<!-- 以下はメニューのkeyとなる -->
    	<string name="menuAlarmOn">アラームON</string>
    	<string name="menuWakeup">起床時刻</string>

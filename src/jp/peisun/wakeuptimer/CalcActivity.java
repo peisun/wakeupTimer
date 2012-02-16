@@ -24,8 +24,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 	public static final String PREVIEW = "preview";
 	public static final String LIMITTIME = "limittime";
 	
-	private static final String POSITIVE_PREVIEW = "プレビューを終わります";
-	private static final String POSITIVE_NEXT = "次です";
 	private static final int TICK_TIME = 1000;
 	
 	private static final int MSG_COUNTDOWN = 1;
@@ -305,7 +303,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private Dialog createStartDialog(){
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		
-		dlg.setMessage("計算を開始します。");
+		dlg.setMessage(getString(R.string.start_message));
 		
 		dlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
 			@Override
@@ -340,7 +338,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			dlg.setMessage(text);
 		}
 		else {
-			positive_text = POSITIVE_NEXT;
+			positive_text = getString(R.string.next_message);
 			dlg.setMessage(text);
 		}
 		
@@ -371,7 +369,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		sendSnoozeCancelIntent();
 		AlertDialog.Builder mFinishdlg = new AlertDialog.Builder(this);
 		//dlg.setTitle("TEST");
-		mFinishdlg.setMessage("起きましたか？");
+		mFinishdlg.setMessage(getString(R.string.wakeup_message));
 		mFinishdlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
 
 			@Override

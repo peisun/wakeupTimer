@@ -76,7 +76,7 @@ public final class R {
     public static final class string {
         /**  AarmOnのデフォルト 
          */
-        public static final int alarmOnDefaultValue=0x7f060021;
+        public static final int alarmOnDefaultValue=0x7f060024;
         /**  CalcActivityでのメッセージ 
          */
         public static final int answer_currect=0x7f060002;
@@ -85,56 +85,61 @@ public final class R {
         public static final int hello=0x7f060000;
         /**  制限時間のデフォルト 
          */
-        public static final int limittimeDefault=0x7f060027;
-        public static final int limittimeDefaultValue=0x7f060028;
+        public static final int limittimeDefault=0x7f06002a;
+        public static final int limittimeDefaultValue=0x7f06002b;
         /**  以下はメニューのkeyとなる 
          */
-        public static final int menuAlarmOn=0x7f060005;
-        public static final int menuLimittime=0x7f06000b;
-        public static final int menuPreview=0x7f06000c;
-        public static final int menuRepeat=0x7f06000a;
-        public static final int menuRingtone=0x7f060007;
-        public static final int menuSnooze=0x7f060009;
-        public static final int menuVibration=0x7f060008;
-        public static final int menuWakeup=0x7f060006;
+        public static final int menuAlarmOn=0x7f060008;
+        public static final int menuLimittime=0x7f06000e;
+        public static final int menuPreview=0x7f06000f;
+        public static final int menuRepeat=0x7f06000d;
+        public static final int menuRingtone=0x7f06000a;
+        public static final int menuSnooze=0x7f06000c;
+        public static final int menuVibration=0x7f06000b;
+        public static final int menuWakeup=0x7f060009;
+        public static final int next_message=0x7f060004;
         /**  Preference 
          */
-        public static final int preference_alarmOn=0x7f06000d;
-        public static final int preference_limittime=0x7f060013;
-        public static final int preference_preview=0x7f060014;
-        public static final int preference_repeat=0x7f060012;
-        public static final int preference_ringtone=0x7f06000f;
-        public static final int preference_snooze=0x7f060011;
-        public static final int preference_vibration=0x7f060010;
-        public static final int preference_wakeupTime=0x7f06000e;
-        public static final int preview_dialog_title=0x7f060004;
+        public static final int preference_alarmOn=0x7f060010;
+        public static final int preference_limittime=0x7f060016;
+        public static final int preference_preview=0x7f060017;
+        public static final int preference_repeat=0x7f060015;
+        public static final int preference_ringtone=0x7f060012;
+        public static final int preference_snooze=0x7f060014;
+        public static final int preference_vibration=0x7f060013;
+        public static final int preference_wakeupTime=0x7f060011;
+        public static final int preview_dialog_title=0x7f060005;
         /**  設問のデフォルト 
          */
-        public static final int repeatDefault=0x7f060025;
-        public static final int repeatDefaultValue=0x7f060026;
+        public static final int repeatDefault=0x7f060028;
+        public static final int repeatDefaultValue=0x7f060029;
         /**  スヌーズのデフォルト 
          */
-        public static final int snoozeTimeDefault=0x7f060023;
-        public static final int snoozeTimeDefaultValue=0x7f060024;
-        public static final int summary_alarmOn_false=0x7f060016;
+        public static final int snoozeTimeDefault=0x7f060026;
+        public static final int snoozeTimeDefaultValue=0x7f060027;
+        public static final int start_message=0x7f060007;
+        public static final int summary_alarmOn_false=0x7f060019;
         /**  Summary 
          */
-        public static final int summary_alarmOn_true=0x7f060015;
-        public static final int summary_limitTime=0x7f06001d;
-        public static final int summary_preview=0x7f06001e;
-        public static final int summary_repeat=0x7f06001c;
-        public static final int summary_ringtone=0x7f060018;
-        public static final int summary_snooze=0x7f06001b;
-        public static final int summary_vibration_false=0x7f06001a;
-        public static final int summary_vibration_true=0x7f060019;
-        public static final int summary_wakeupTime=0x7f060017;
+        public static final int summary_alarmOn_true=0x7f060018;
+        public static final int summary_limitTime=0x7f060020;
+        public static final int summary_preview=0x7f060021;
+        public static final int summary_repeat=0x7f06001f;
+        public static final int summary_ringtone=0x7f06001b;
+        public static final int summary_snooze=0x7f06001e;
+        public static final int summary_vibration_false=0x7f06001d;
+        public static final int summary_vibration_true=0x7f06001c;
+        public static final int summary_wakeupTime=0x7f06001a;
         /**  バイブレーションのデフォルト 
          */
-        public static final int vibrationDefaultValue=0x7f060022;
+        public static final int vibrationDefaultValue=0x7f060025;
         /**  起床時刻のデフォルト 
          */
-        public static final int wakeupHourDefault=0x7f06001f;
-        public static final int wakeupMinuteDefault=0x7f060020;
+        public static final int wakeupHourDefault=0x7f060022;
+        public static final int wakeupMinuteDefault=0x7f060023;
+        /**   
+         */
+        public static final int wakeup_message=0x7f060006;
     }
     public static final class xml {
         public static final int main=0x7f040000;
