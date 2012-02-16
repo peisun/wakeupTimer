@@ -49,9 +49,9 @@
     <string name="snoozeTimeDefault">5分</string>
     <string name="snoozeTimeDefaultValue">300000</string>
     <!-- 設問のデフォルト -->
-    <string name="repeatDefault">3問</string>
-    <string name="repeatDefaultValue">3</string>
+    <string name="repeatDefault">5問</string>
+    <string name="repeatDefaultValue">5</string>
     <!-- 制限時間のデフォルト -->
-    <string name="limittimeDefault">30秒</string>
-    <string name="limittimeDefaultValue">30000</string>
+    <string name="limittimeDefault">60秒</string>
+    <string name="limittimeDefaultValue">60000</string>
 </resources>
