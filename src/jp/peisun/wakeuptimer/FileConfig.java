@@ -40,7 +40,6 @@ public class FileConfig {
 
 			sl.startTag("", tag_alarmon);
 			sl.text(Boolean.toString(config.mAlarmOn));
-			Log.d(TAG,"FileConfig.write " + Boolean.toString(config.mAlarmOn));
 			sl.endTag("", tag_alarmon);
 			sl.text("\n");
 			
@@ -51,13 +50,7 @@ public class FileConfig {
 
 
 			sl.startTag("", tag_ringtonepath);
-			if(config.mRingtonePath == null){
-				sl.text("");
-			}
-			else {
-				sl.text(config.mRingtonePath);
-			}
-			Log.d(TAG,"mRingtonePath " + config.mRingtonePath);
+			sl.text(config.mRingtonePath);
 			sl.endTag("", tag_ringtonepath);
 			sl.text("\n");
 

@@ -55,12 +55,16 @@ import android.widget.TimePicker;
 public class WakeupTimerActivity extends PreferenceActivity  {
     /** Called when the activity is first created. */
 	private final String TAG = "WakeupTimerActivity";
-	public static final String ACTION_CONFIG = "jp.peisun.wakeupTimer.intent.config";
+	public static final String SET_ALARM = "jp.peisun.wakeupTimer.intent.setalarm";
+	public static final String SET_ALARM_DAY = "day";
+	public static final String SET_ALARM_HOUR = "hourOfDay";
+	public static final String SET_ALARM_MINUTE = "minute";
 	private static final int REVIEW_REPEAT = 2; /* preview時の計算回数 */
 	
 	
 	public ConfigData mConfig = null;
-
+	
+	
 	private Preference.OnPreferenceChangeListener  onPreferenceChangeListener_alarmOn =
 		new OnPreferenceChangeListener(){
 		@Override
@@ -92,6 +96,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 			return true;
 		}
 	};
+	
 	private Preference.OnPreferenceChangeListener  onPreferenceChangeListener_ringtone =
 		new OnPreferenceChangeListener(){
 		@Override
@@ -183,8 +188,6 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         }
         Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
         rtp.setSummary(ringtone.getTitle(this));
-        Log.d(TAG,"Ringtone " + ringtone.getTitle(this));
-//        rtp.setSummary(mConfig.mRingtonePath);
 		
         
         // バイブレーション
@@ -259,7 +262,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	private void readConfigData()  {
 		// TODO 自動生成されたメソッド・スタブ
 		InputStream is = null;
-
+		
 		String filepath = this.getFilesDir().getAbsolutePath() + "/" +  FileConfig.xmlfile;  
 		File file = new File(filepath);
 		
@@ -290,6 +293,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		ConfigData config = new ConfigData();
 		
 		config.mAlarmOn = Boolean.parseBoolean(getString(R.string.alarmOnDefaultValue));
+		
 		config.hour = Integer.parseInt(getString(R.string.wakeupHourDefault));
 		config.minute = Integer.parseInt(getString(R.string.wakeupMinuteDefault));
 		
@@ -299,9 +303,8 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 				
 		config.mCalcRepeat = Integer.parseInt(getString(R.string.repeatDefaultValue));
 		
-		Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-        Ringtone ringtone = RingtoneManager.getRingtone(this, uri);
-		config.mRingtonePath = ringtone.getTitle(this);
+		Uri uri = RingtoneManager.getDefaultUri(timerService.RINGTON_STREAMTYPE);
+		config.mRingtonePath = uri.toString();
 		
 		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefaultValue));
 		return config;

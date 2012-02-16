@@ -14,11 +14,13 @@ import java.util.GregorianCalendar;
 
 
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.KeyguardManager.KeyguardLock;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -69,7 +71,7 @@ public class timerService extends Service {
 	/*
 	 * Alarmを再設定するまでの時間稼ぎ
 	 */
-	private static final long DELAY_TIME = 60*1000; // 60秒
+	private static final long DELAY_TIME = 61*1000; // 61秒
 	private static final int MSG = 1;
 	private WaitHandler mWaitHandler = new WaitHandler();
 
@@ -322,12 +324,40 @@ public class timerService extends Service {
 		if(rightNow.getTimeInMillis() > setDate.getTimeInMillis()){
 			setDate.add(Calendar.DATE, 1);
 		}
-
+		setDate.set(Calendar.SECOND, 0);
 
 		Log.d(TAG,"setTime:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
 		mAlarmSender = PendingIntent.getService(this,0, wakeup_intent, 0);
 		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,setDate.getTimeInMillis(),mAlarmSender);
+		
+		
+//		String message = String.format("次回アラームは%d日の%02d:%02dにセットされました。", 
+//				setDate.get(Calendar.DAY_OF_MONTH),mConfig.hour	,mConfig.minute);
+//		AlertDialog.Builder mNextAlarmDlg = new AlertDialog.Builder(this);
+//		mNextAlarmDlg.setTitle("TEST");
+//		mNextAlarmDlg.setMessage(message);
+//		
+//		mNextAlarmDlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
+//			@Override
+//			public void onClick(DialogInterface dialog, int which) {
+//				// TODO 自動生成されたメソッド・スタブ
+//			}
+//			
+//		});
+//		mNextAlarmDlg.create();
+//		mNextAlarmDlg.show();
+//		AlertDialog alertDialog = mNextAlarmDlg.create();
+//        // アラートダイアログを表示します
+//        alertDialog.show();
+		
+		
+//		Intent intent = new Intent(WakeupTimerActivity.SET_ALARM);
+//		intent.putExtra(WakeupTimerActivity.SET_ALARM_DAY, setDate.get(Calendar.DATE));
+//		intent.putExtra(WakeupTimerActivity.SET_ALARM_HOUR, setDate.get(Calendar.HOUR_OF_DAY));
+//		intent.putExtra(WakeupTimerActivity.SET_ALARM_MINUTE,setDate.get(Calendar.MINUTE));
+//		startActivity(intent);
+		
 
 	}
 	private void alarmSetCancel(){
@@ -335,7 +365,9 @@ public class timerService extends Service {
 			mAmWakeup.cancel(mAlarmSender);
 		}
 	}
-
+	private void showDialog(){
+		
+	}
 
 	public void soundPlay(String path){
 		mMediaPlayer = new MediaPlayer();

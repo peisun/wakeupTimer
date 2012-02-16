@@ -3,8 +3,11 @@
 
     <string name="hello">Hello World, WakeupTimerActivity!</string>
     <string name="app_name">WakeupTimer</string>
-    
-   	<!-- 以下はメニューのkeyとなるので、メニューの先頭文字列と同一でないといけない -->
+    <!-- CalcActivityでのメッセージ -->
+    <string name="answer_currect">正解です</string>
+    <string name="answer_mistake">間違いです</string>
+    <string name="preview_dialog_title">プレビューを終わります</string>
+   	<!-- 以下はメニューのkeyとなる -->
    	<string name="menuAlarmOn">アラームON</string>
    	<string name="menuWakeup">起床時刻</string>
    	<string name="menuRingtone">アラーム音</string>

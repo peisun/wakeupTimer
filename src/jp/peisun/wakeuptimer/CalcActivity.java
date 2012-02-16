@@ -332,15 +332,19 @@ public class CalcActivity extends Activity implements OnClickListener {
 		String positive_text = null;
 		sendSnoozeCancelIntent();
 		
+		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
+		dlg.setMessage(text);
 		if(preview == true){
-			positive_text = POSITIVE_PREVIEW;
+			positive_text = "OK";
+			dlg.setTitle(getString(R.string.preview_dialog_title));
+			dlg.setMessage(text);
 		}
 		else {
 			positive_text = POSITIVE_NEXT;
+			dlg.setMessage(text);
 		}
 		
-		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
-		dlg.setMessage(text);
+		
 		dlg.setPositiveButton(positive_text, new DialogInterface.OnClickListener(){
 
 			@Override
@@ -362,7 +366,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		
 		
 	}
-
+	
 	private Dialog createFinishDilog(){
 		sendSnoozeCancelIntent();
 		AlertDialog.Builder mFinishdlg = new AlertDialog.Builder(this);
@@ -393,15 +397,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 	protected Dialog onCreateDialog(int id) {
 		// TODO 自動生成されたメソッド・スタブ
 		Dialog dlg = super.onCreateDialog(id);
+		String title_string;
 		switch(id){
 		case START_DIALOG_ID:
 			dlg = createStartDialog();
 			break;
 		case NEXT_CORRECT_DIALOG_ID:
-			dlg = createNextDialog("正解です");
+			title_string = getString(R.string.answer_currect);
+			dlg = createNextDialog(title_string);
 			break;
 		case NEXT_DISTRACTER_DIALOG_ID:
-			dlg = createNextDialog("間違いです");
+			title_string = getString(R.string.answer_mistake);
+			dlg = createNextDialog(title_string);
 			break;	
 		case FINISH_DIALOG_ID:
 			dlg = createFinishDilog();
