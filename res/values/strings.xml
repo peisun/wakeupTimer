@@ -8,6 +8,8 @@
     <string name="answer_mistake">間違いです</string>
     <string name="next_message">次です</string>
     <string name="preview_dialog_title">プレビューを終わります</string>
+    <!-- Toastメッセージ -->
+    <string name="toast_setalarm_format">にアラームをセットしました。%n全ての設問が正解でないとスヌーズが働きますので、そのつもりで。</string>
     
     <!--  -->
     <string name="wakeup_message">起きましたか？</string>
@@ -47,7 +49,7 @@
    	<string name="wakeupMinuteDefault">30</string>
   
     <!-- AarmOnのデフォルト -->
-    <string name="alarmOnDefaultValue">true</string>
+    <string name="alarmOnDefaultValue">false</string>
     <!-- バイブレーションのデフォルト -->
     <string name="vibrationDefaultValue">true</string>
     <!-- スヌーズのデフォルト -->

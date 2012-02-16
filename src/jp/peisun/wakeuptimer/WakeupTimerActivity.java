@@ -46,6 +46,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 
 /*
@@ -69,7 +70,13 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		new OnPreferenceChangeListener(){
 		@Override
 		public boolean onPreferenceChange(Preference preference, Object newValue) {
+			boolean preAlarmCheck = mConfig.mAlarmOn;
 			checkAlarmOn(preference,newValue);
+			if (((Boolean)newValue).booleanValue() == true && preAlarmCheck == false) {
+				String format = "%02d:%02d"+getString(R.string.toast_setalarm_format);
+				String message = String.format(format, mConfig.hour,mConfig.minute);
+				showToast(message);
+			}
 	        // 変更を適用するために true を返す  
 	        return true;
 		}
@@ -81,6 +88,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 			public boolean onPreferenceClick(Preference preference) {
 				// TODO 自動生成されたメソッド・スタブ
 				selectTimeDialog(preference);
+				
 				return true;
 			}
 	};
@@ -88,11 +96,18 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		new OnPreferenceChangeListener(){
 		@Override
 		public boolean onPreferenceChange(Preference preference, Object newValue){
-			int layoutId = preference.getLayoutResource();
-	        View layoutview = (View)findViewById(layoutId);
-	        String time = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
-	        TextView textView = (TextView)layoutview.findViewById(R.id.PreferenceValuetextView);
-	        textView.setText(time);
+			if (mConfig.mAlarmOn == true) {
+				String format = "%02d:%02d"+getString(R.string.toast_setalarm_format);
+				String message = String.format(format, mConfig.hour,mConfig.minute);
+				showToast(message);
+			}
+			
+//			int layoutId = preference.getLayoutResource();
+//	        View layoutview = (View)findViewById(layoutId);
+//	        String time = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
+//	        TextView textView = (TextView)layoutview.findViewById(R.id.PreferenceValuetextView);
+//	        textView.setText(time);
+			
 			return true;
 		}
 	};
@@ -171,6 +186,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         Preference pref = (Preference)findPreference(cs);   
         // リスナーを設定する  
         pref.setOnPreferenceClickListener(onPreferenceClickListener_wakeupTime);
+//        pref.setOnPreferenceChangeListener(onPreferenceChangeListener_wakeupTime);
         String summary = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
         pref.setSummary(summary);
         
@@ -310,6 +326,10 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		config.mVabration = Boolean.parseBoolean(getString(R.string.vibrationDefaultValue));
 		return config;
 	}
+	private void showToast(String message){
+		// 第3引数は、表示期間（LENGTH_SHORT、または、LENGTH_LONG）
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+	}
     private void checkAlarmOn(Preference preference, Object newValue){
 		String summary;  
         if (((Boolean)newValue).booleanValue()) {  
@@ -377,12 +397,8 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 		
 	}
     public void selectTimeDialog(Preference preference){
-    	Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
-        final Preference pref = (Preference)preference;
+    	final Preference pref = (Preference)preference;
         
-    	
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
         		new TimePickerDialog.OnTimeSetListener() {
 			@Override
@@ -392,8 +408,13 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 				String summary = String.format("%02d:%02d", mConfig.hour,mConfig.minute);
 				pref.setSummary(summary);
 				sendSetConfigIntent(mConfig);
+				if (mConfig.mAlarmOn == true) {
+					String format = "%02d:%02d"+getString(R.string.toast_setalarm_format);
+					String message = String.format(format, mConfig.hour,mConfig.minute);
+					showToast(message);
+				}
         	}
-        }, hour, minute, true);
+        }, mConfig.hour,mConfig.minute, true);
 
         timePickerDialog.show();
     	
