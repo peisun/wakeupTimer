@@ -10,7 +10,9 @@
     <string name="preview_dialog_title">プレビューを終わります</string>
     <!-- Toastメッセージ -->
     <string name="toast_setalarm_format">にアラームをセットしました。%n全ての設問が正解でないとスヌーズが働きますので、そのつもりで。</string>
-    
+    <!-- CalcActivityの表示 -->
+    <string name="how_long_time">タイムアップまで後</string>
+    <string name="time_unit">秒</string>
     <!--  -->
     <string name="wakeup_message">起きましたか？</string>
     <string name="start_message">計算を開始します</string>

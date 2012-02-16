@@ -144,7 +144,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 	protected void onPause() {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onPause();
-		Log.d(TAG,"onPause");
 	}
 	
 	private void createExpression(){
@@ -458,7 +457,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onDestroy() {
 		// TODO 自動生成されたメソッド・スタブ
-		Log.d(TAG,"onDestory");
+		
 		super.onDestroy();
 	}
 
