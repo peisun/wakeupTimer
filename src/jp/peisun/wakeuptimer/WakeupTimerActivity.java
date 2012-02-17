@@ -67,7 +67,7 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	public static final String SET_ALARM_DAY = "day";
 	public static final String SET_ALARM_HOUR = "hourOfDay";
 	public static final String SET_ALARM_MINUTE = "minute";
-	private static final int REVIEW_REPEAT = 2; /* preview時の計算回数 */
+	private static final int REVIEW_REPEAT = 1; /* preview時の計算回数 */
 	
 	private AdView adView;
 	/** 広告表示用レイアウト */
