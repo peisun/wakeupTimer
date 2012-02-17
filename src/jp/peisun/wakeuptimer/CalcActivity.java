@@ -36,6 +36,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private final int TERM_2_SIZE = 10;
 	private final int TERM_3_SIZE = 1000;
 	
+	private int mTermStep = 0;
+	private int mTermStepSize = 100;
+	
+	
 	private final int FINISH_DIALOG_ID = 1;
 	private final int NEXT_CORRECT_DIALOG_ID = 2;
 	private final int NEXT_DISTRACTER_DIALOG_ID = 3;
@@ -119,14 +123,25 @@ public class CalcActivity extends Activity implements OnClickListener {
 
 			mRepeat = extras.getInt(REPEAT);
 			mLimitTime = extras.getLong(LIMITTIME);
+			
 			Log.d(TAG,"preview "+ preview);
 			Log.d(TAG,"mRepeat " + mRepeat);
 			Log.d(TAG,"mLimitTIme "+ mLimitTime);
 			
+			// 設問数が-1のときはランダム
+			// 但し、10問より多く、19問以下
 			if(mRepeat <= 0){
 				long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
 				Random r = new Random(seed);
-				mRepeat = Math.abs(r.nextInt()%20);
+				do {
+					mRepeat = Math.abs(r.nextInt()%20);
+				}while(mRepeat < 10);
+			}
+			if(mRepeat % 2 == 1){
+				mTermStep = mRepeat-1;
+			}
+			else {
+				mTermStep = mRepeat;
 			}
 			setTextCountDown(mLimitTime);
 		}
@@ -149,16 +164,39 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private void createExpression(){
 		long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
 		Random r = new Random(seed);
-		int a = Math.abs(r.nextInt()%TERM_1_SIZE);
-		int b = Math.abs(r.nextInt()%TERM_2_SIZE);
-		int c = Math.abs(r.nextInt()%TERM_3_SIZE);
+		int a,b,c;
+		// 0は出現しないようにする
+		do {
+			a = Math.abs(r.nextInt() % mTermStepSize);
+		}while(a == 0);
+		do {
+			b = Math.abs(r.nextInt() % (mTermStepSize/10));
+		}while(b == 0);
+		do {
+			c = Math.abs(r.nextInt() % mTermStepSize);
+		}while(c == 0);
+		// 足し算だけではつまらないので引き算を入れる
+		int plus = Math.abs(r.nextInt() % 2);
 		expressionView = (TextView)findViewById(R.id.ExpressionTextView);
-		expressionView.setText(String.format("%d×%d+%d= ",a,b,c));
-		creatAnswer = a*b+c;
+		if((plus == 0) && (a*b > c)){
+			expressionView.setText(String.format("%d×%d-%d= ",a,b,c));
+			creatAnswer = a*b-c;
+		}
+		else {
+			expressionView.setText(String.format("%d×%d+%d= ",a,b,c));
+			creatAnswer = a*b+c;
+						
+		}
 		Log.d(TAG,"Answer = " + creatAnswer);
 		/* 解答欄を空欄にする */
 		numberView = (TextView)findViewById(R.id.AnswerTextView);
 		numberView.setText(null);
+		
+		//　設問数の半分くらいで、桁を上げる
+		// 3桁以上は面倒なのでやらない
+		if(mTermStep/2 >= mRepeat && !(mTermStepSize >= 1000)){
+			mTermStepSize *= 10;
+		}
 	}
 	
 	private void setTextCountDown(long time){
