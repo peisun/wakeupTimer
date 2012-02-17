@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -23,9 +24,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 	public static final String REPEAT = "repeat";
 	public static final String PREVIEW = "preview";
 	public static final String LIMITTIME = "limittime";
-	
+
 	private static final int TICK_TIME = 1000;
-	
+
 	private static final int MSG_COUNTDOWN = 1;
 	private static final int MSG_CANCEL = 2;
 	private static final int MSG_FINISH = 3;
@@ -35,20 +36,22 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private final int TERM_1_SIZE = 1000;
 	private final int TERM_2_SIZE = 10;
 	private final int TERM_3_SIZE = 1000;
-	
+
 	private int mTermStep = 0;
 	private int mTermStepSize = 100;
-	
-	
+
+
 	private final int FINISH_DIALOG_ID = 1;
 	private final int NEXT_CORRECT_DIALOG_ID = 2;
 	private final int NEXT_DISTRACTER_DIALOG_ID = 3;
 	private final int START_DIALOG_ID = 4;
-	
+	private final int PREVIEWFINISH_CORRECT_DIALOG_ID = 5;
+	private final int PREVIEWFINISH_MISTAKE_DIALOG_ID = 6;
+
 	private CountdownHandler mCountdownHandler = new CountdownHandler();
 	private HashMap<Button,Integer> buttonMap = new HashMap<Button,Integer>();
 	private Button button0,button1,button2,button3,button4,button5,button6,
-		button7,button8,button9,buttonEnter,buttonContinue,buttonClr;
+	button7,button8,button9,buttonEnter,buttonContinue,buttonClr;
 	private TextView numberView; /* 入力数字 */
 	private TextView remainingTimeView; /* 残り時間 */
 	private TextView expressionView; /* 計算式 */
@@ -60,13 +63,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private boolean isCalc = true;
 	private int mAnswerLength = 0;
 
-	private AlertDialog mAlertFinish;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.calclayout);
-		
+
 		/* ボタンの生成 */
 		button0 = (Button)findViewById(R.id.button0);
 		button0.setOnClickListener(this);
@@ -94,7 +96,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		buttonEnter.setOnClickListener(this);
 		buttonContinue = (Button)findViewById(R.id.buttonContinue);
 		buttonContinue.setOnClickListener(this);
-		
+
 		/* ボタンマップの作成 */
 		buttonMap.put(button0, 0);
 		buttonMap.put(button1, 1);
@@ -109,9 +111,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 		buttonMap.put(buttonEnter, BUTTON_ENTER);
 		buttonMap.put(buttonContinue, BUTTON_CONTINUE);
 		buttonMap.put(buttonClr, BUTTON_CLR);
-		
+
 		buttonContinue.setText(getString(R.string.enlargement_text));
-		
+
 		/* カウントダウン表示のTextView取得 */
 		remainingTimeView = (TextView)findViewById(R.id.CountDownTextView);
 		/* 入力数字のTextView取得 */
@@ -119,18 +121,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 		numberView.setText(null);
 		/* 計算式のTextView取得 */
 		expressionView = (TextView)findViewById(R.id.ExpressionTextView);
-		
+
 		Bundle extras=getIntent().getExtras();
 		if(extras != null){
 			preview = extras.getBoolean(PREVIEW);
 
 			mRepeat = extras.getInt(REPEAT);
 			mLimitTime = extras.getLong(LIMITTIME);
-			
+
 			Log.d(TAG,"preview "+ preview);
 			Log.d(TAG,"mRepeat " + mRepeat);
 			Log.d(TAG,"mLimitTIme "+ mLimitTime);
-			
+
 			// 設問数が-1のときはランダム
 			// 但し、10問より多く、19問以下
 			if(mRepeat <= 0){
@@ -152,9 +154,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 		showDialog(START_DIALOG_ID);
-		
+
 		createExpression();
 		super.onResume();
 	}
@@ -163,7 +165,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onPause();
 	}
-	
+
 	private void createExpression(){
 		long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
 		Random r = new Random(seed);
@@ -188,23 +190,23 @@ public class CalcActivity extends Activity implements OnClickListener {
 		else {
 			expressionView.setText(String.format("%d×%d+%d= ",a,b,c));
 			creatAnswer = a*b+c;
-						
+
 		}
 		Log.d(TAG,"Answer = " + creatAnswer);
 		/* 解答欄に0を入れる */
 		numberView = (TextView)findViewById(R.id.AnswerTextView);
 		numberView.setText("0");
-		
+
 		//　設問数の半分くらいで、桁を上げる
 		// 3桁以上は面倒なのでやらない
 		if(mTermStep/2 >= mRepeat && !(mTermStepSize >= 1000)){
 			mTermStepSize *= 10;
 		}
-		
+
 		// 解答の文字列長を保存しておく
 		mAnswerLength = Integer.toString(creatAnswer).length();
 	}
-	
+
 	private void setTextCountDown(long time){
 		remainingTimeView.setText(String.format("%d",time/TICK_TIME));
 	}
@@ -229,27 +231,26 @@ public class CalcActivity extends Activity implements OnClickListener {
 			return mRemainingTime;
 		}
 		@Override
-        public void handleMessage(Message msg) {
+		public void handleMessage(Message msg) {
 			switch(msg.what){
-				case MSG_COUNTDOWN:
-					mRemainingTime-=TICK_TIME;
-					setTextCountDown(mRemainingTime);
-					if(mRemainingTime <= 0){
-						sendSoundStartIntent();
-					}
-					else {
-						sleep();
-					}
-					break;
-				case MSG_CANCEL:
-					sendSoundStopIntent();
-					break;
-				case MSG_FINISH:
-					mAlertFinish.dismiss();
-					finish();
-					break;
-				default:
-					break;
+			case MSG_COUNTDOWN:
+				mRemainingTime-=TICK_TIME;
+				setTextCountDown(mRemainingTime);
+				if(mRemainingTime <= 0){
+					sendSoundStartIntent();
+				}
+				else {
+					sleep();
+				}
+				break;
+			case MSG_CANCEL:
+				sendSoundStopIntent();
+				break;
+			case MSG_FINISH:
+				finish();
+				break;
+			default:
+				break;
 			}
 		}
 		public void sleep(){
@@ -280,7 +281,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 				answer = answer*10+value;
 				setTextAnswer(answer);
 			}
-			
+
 		}
 		else if(i==BUTTON_CLR){
 			keytouch = 0;
@@ -297,20 +298,31 @@ public class CalcActivity extends Activity implements OnClickListener {
 			else {
 				a = -1;
 			}
-			
+
 			keytouch = 0;
 			answer = 0;
+
 			if(a == creatAnswer){
 				stopCountDown();
 				mRepeat--;
-				showDialog(NEXT_CORRECT_DIALOG_ID);
-				
+				if(preview){
+					showDialog(PREVIEWFINISH_CORRECT_DIALOG_ID);
+				}
+				else {
+					showDialog(NEXT_CORRECT_DIALOG_ID);
+				}
+
 			}
 			else {
-				showDialog(NEXT_DISTRACTER_DIALOG_ID);
+				if(preview){
+					showDialog(PREVIEWFINISH_MISTAKE_DIALOG_ID);
+				}
+				else {
+					showDialog(NEXT_DISTRACTER_DIALOG_ID);
+				}
 			}
-			
-			if(mRepeat <= 0){
+
+			if(mRepeat <= 0 && preview == false){
 				showDialog(FINISH_DIALOG_ID);
 			}
 		}
@@ -348,14 +360,14 @@ public class CalcActivity extends Activity implements OnClickListener {
 	}
 	private Dialog createStartDialog(){
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
-		
+
 		dlg.setMessage(getString(R.string.start_message));
-		
+
 		dlg.setPositiveButton("OK", new DialogInterface.OnClickListener(){
 			@Override
 			public void onClick(DialogInterface arg0, int arg1) {
 				// TODO 自動生成されたメソッド・スタブ
-				
+
 				if(preview == false){
 					sendSoundStopIntent();
 					// 「やる」と言っておきながら、やらないで放っておく場合は
@@ -366,52 +378,79 @@ public class CalcActivity extends Activity implements OnClickListener {
 				startCountDown();
 				arg0.dismiss();
 			}
+			
 		});
-		
+		// backキー対策
+		// キャンセルはできないこととする
+		dlg.setCancelable(false);
+
 		return dlg.create();
-		
-		
+
+
 	}
 	private Dialog createNextDialog(String text){
 		String positive_text = null;
 		sendSnoozeCancelIntent();
-		
+
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		dlg.setMessage(text);
-		if(preview == true){
-			positive_text = "OK";
-			dlg.setTitle(getString(R.string.preview_dialog_title));
-			dlg.setMessage(text);
-		}
-		else {
-			positive_text = getString(R.string.next_message);
-			dlg.setMessage(text);
-		}
-		
-		
+
+		positive_text = getString(R.string.next_message);
+		dlg.setMessage(text);
+
 		dlg.setPositiveButton(positive_text, new DialogInterface.OnClickListener(){
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO 自動生成されたメソッド・スタブ
-				if(preview == true){
-					stopCountDown();
-					finish(); /* プレビューなら終わる */
-				}
-				else {
-					createExpression();
-					startCountDown();
-					dialog.dismiss();
-				}
+				createExpression();
+				startCountDown();
+				dialog.dismiss();
+			}
+
+		});
+		dlg.setOnCancelListener(new DialogInterface.OnCancelListener(){
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				// キャンセル(backキー)されても計算を継続させる
+				createExpression();
+				startCountDown();
 			}
 			
 		});
 		return dlg.create();
-		
-		
+
+
 	}
-	
-	private Dialog createFinishDilog(){
+	private Dialog createPreviewFinishDialog(String text){
+		String positive_text = null;
+		
+		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
+		dlg.setMessage(text);
+
+		positive_text = "OK";
+		dlg.setTitle(getString(R.string.preview_dialog_title));
+		dlg.setMessage(text);
+
+
+		dlg.setPositiveButton(positive_text, new DialogInterface.OnClickListener(){
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO 自動生成されたメソッド・スタブ
+				stopCountDown();
+				isCalc = false;
+				finish(); /* プレビューなら終わる */
+			}
+
+		});
+		return dlg.create();
+
+
+	}
+
+	private Dialog createFinishDialog(){
 		sendSnoozeCancelIntent();
 		AlertDialog.Builder mFinishdlg = new AlertDialog.Builder(this);
 		//dlg.setTitle("TEST");
@@ -432,10 +471,10 @@ public class CalcActivity extends Activity implements OnClickListener {
 				dialog.dismiss();
 				finish();
 			}
-			
+
 		});
 		return mFinishdlg.create();
-		
+
 	}
 	@Override
 	protected Dialog onCreateDialog(int id) {
@@ -455,7 +494,16 @@ public class CalcActivity extends Activity implements OnClickListener {
 			dlg = createNextDialog(title_string);
 			break;	
 		case FINISH_DIALOG_ID:
-			dlg = createFinishDilog();
+			dlg = createFinishDialog();
+			break;
+		case PREVIEWFINISH_CORRECT_DIALOG_ID:
+			title_string = getString(R.string.answer_currect);
+			dlg = createPreviewFinishDialog(title_string);
+			break;
+		case PREVIEWFINISH_MISTAKE_DIALOG_ID:
+			title_string = getString(R.string.answer_mistake);
+			dlg = createPreviewFinishDialog(title_string);
+			break;
 		}
 		return dlg;
 	}
@@ -504,8 +552,9 @@ public class CalcActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onDestroy() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 		super.onDestroy();
 	}
+	
 
 }
