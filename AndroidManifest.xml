@@ -5,10 +5,15 @@
     android:versionName="1.0" >
 
     <uses-sdk android:minSdkVersion="8" />
+
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-
+	<!-- AdMob SDK permissions -->
+    <!-- 広告の取得に必要 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 地域にあった広告の取得に必要 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
@@ -25,6 +30,8 @@
             </intent-filter>
             
         </activity>
+        
+
         <activity 
             android:name="CalcActivity" 
             android:screenOrientation="portrait"
@@ -57,6 +64,8 @@
             <action android:name="android.media.RINGER_MODE_CHANGED"/>
             </intent-filter>
         </receiver>
+        <activity android:name="com.google.ads.AdActivity"
+              android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"/>
     </application>
 
 </manifest>

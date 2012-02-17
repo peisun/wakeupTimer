@@ -58,6 +58,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private int mRepeat = 0;
 	private long mLimitTime = 0;
 	private boolean isCalc = true;
+	private int mAnswerLength = 0;
 
 	private AlertDialog mAlertFinish;
 	@Override
@@ -108,6 +109,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 		buttonMap.put(buttonEnter, BUTTON_ENTER);
 		buttonMap.put(buttonContinue, BUTTON_CONTINUE);
 		buttonMap.put(buttonClr, BUTTON_CLR);
+		
+		buttonContinue.setText(getString(R.string.enlargement_text));
 		
 		/* カウントダウン表示のTextView取得 */
 		remainingTimeView = (TextView)findViewById(R.id.CountDownTextView);
@@ -188,15 +191,18 @@ public class CalcActivity extends Activity implements OnClickListener {
 						
 		}
 		Log.d(TAG,"Answer = " + creatAnswer);
-		/* 解答欄を空欄にする */
+		/* 解答欄に0を入れる */
 		numberView = (TextView)findViewById(R.id.AnswerTextView);
-		numberView.setText(null);
+		numberView.setText("0");
 		
 		//　設問数の半分くらいで、桁を上げる
 		// 3桁以上は面倒なのでやらない
 		if(mTermStep/2 >= mRepeat && !(mTermStepSize >= 1000)){
 			mTermStepSize *= 10;
 		}
+		
+		// 解答の文字列長を保存しておく
+		mAnswerLength = Integer.toString(creatAnswer).length();
 	}
 	
 	private void setTextCountDown(long time){
@@ -269,8 +275,11 @@ public class CalcActivity extends Activity implements OnClickListener {
 		int value = i.intValue();
 		if(value >= 0 && value <= 9){
 			keytouch++;
-			answer = answer*10+value;
-			setTextAnswer(answer);
+			// 必要以上のキー入力を受け付けない
+			if(keytouch <= mAnswerLength){
+				answer = answer*10+value;
+				setTextAnswer(answer);
+			}
 			
 		}
 		else if(i==BUTTON_CLR){

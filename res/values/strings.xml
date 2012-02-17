@@ -3,6 +3,7 @@
 
     <string name="hello">Hello World, WakeupTimerActivity!</string>
     <string name="app_name">WakeupTimer</string>
+    <string name="enlargement_text">時間延長</string>
     <!-- CalcActivityでのメッセージ -->
     <string name="answer_currect">正解です</string>
     <string name="answer_mistake">間違いです</string>

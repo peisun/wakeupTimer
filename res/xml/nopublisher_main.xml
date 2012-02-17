@@ -19,7 +19,5 @@
     <ListPreference android:key="@string/preference_repeat" android:title="@string/menuRepeat" android:summary="@string/summary_repeat" android:selectable="true" android:entryValues="@array/entryvalue_repeat" android:entries="@array/entries_repeat" android:defaultValue="@string/repeatDefaultValue"/>
     <ListPreference android:key="@string/preference_limittime" android:title="@string/menuLimittime" android:summary="@string/summary_limitTime" android:entryValues="@array/entryvalue_limittime" android:entries="@array/entries_limittime" android:selectable="true" android:defaultValue="@string/limittimeDefaultValue"/>
     <Preference android:key="@string/preference_preview" android:title="@string/menuPreview" android:summary="@string/summary_preview" android:selectable="true" android:enabled="true"/>
-    <Preference
-    android:selectable="false"
-    android:layout="@layout/admob" />
+    
 </PreferenceScreen>

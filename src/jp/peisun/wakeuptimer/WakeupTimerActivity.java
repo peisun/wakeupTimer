@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 
+import com.google.ads.*;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.TimePickerDialog;
@@ -32,6 +34,7 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.RingtonePreference;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +46,10 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.LinearLayout.LayoutParams;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -54,6 +60,7 @@ import android.widget.Toast;
  * 
  */
 public class WakeupTimerActivity extends PreferenceActivity  {
+	private final String MY_AD_UNIT_ID = null;
     /** Called when the activity is first created. */
 	private final String TAG = "WakeupTimerActivity";
 	public static final String SET_ALARM = "jp.peisun.wakeupTimer.intent.setalarm";
@@ -62,6 +69,9 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	public static final String SET_ALARM_MINUTE = "minute";
 	private static final int REVIEW_REPEAT = 2; /* preview時の計算回数 */
 	
+	private AdView adView;
+	/** 広告表示用レイアウト */
+	private LinearLayout  adPosition;
 	
 	public ConfigData mConfig = null;
 	
@@ -168,7 +178,12 @@ public class WakeupTimerActivity extends PreferenceActivity  {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.addPreferencesFromResource(R.xml.main);
+        if(MY_AD_UNIT_ID == null){
+        	this.addPreferencesFromResource(R.xml.nopublisher_main);
+        }
+        else {
+        	this.addPreferencesFromResource(R.xml.main);
+        }
         
         // 設定ファイルの
         readConfigData();
@@ -247,7 +262,13 @@ public class WakeupTimerActivity extends PreferenceActivity  {
         
 		// Serviceがbootしていない場合があるので、パラメータを設定してサービスを起動しておく
 		sendSetConfigIntent(mConfig); 
-        
+		
+		if(MY_AD_UNIT_ID != null){
+			// 広告の表示
+			InitAdMob();
+			//既にセットされているビューに追加する場合は以下
+			addContentView(adPosition, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		}
     }
     @Override
 	protected void onStart() {
@@ -263,6 +284,27 @@ public class WakeupTimerActivity extends PreferenceActivity  {
 	protected void onResume(){
 		super.onResume();
 	}
+	private void InitAdMob(){
+	    //AdMobの広告表示用ビュー領域作成
+	    adView = new AdView(this, AdSize.BANNER, MY_AD_UNIT_ID);
+	    AdRequest adRequest = new AdRequest();
+	    adRequest.setTesting(true);          //TODO:公開する時にはこの行を削除すること
+	    adView.loadAd(adRequest);
+
+	    //AdMobの広告表示位置を設定
+	    adView.setGravity(Gravity.BOTTOM);
+	    adView.setLayoutParams(new RelativeLayout.LayoutParams(
+	        RelativeLayout.LayoutParams.WRAP_CONTENT,
+	        RelativeLayout.LayoutParams.WRAP_CONTENT));
+
+	    //AdMobの広告の状態を取得するイベントリスナーを登録
+	    //adView.setAdListener(AdEventListener);
+
+	    //広告表示用レイアウト作成し、AdMobの広告セット
+	    adPosition = new LinearLayout(this);
+	    adPosition.setGravity(Gravity.BOTTOM);
+	    adPosition.addView(adView);
+	  }
 	private String SummaryfindById(int id,int valueid,long value){
 		String[] entries = getResources().getStringArray(id);
 		String[] entryValue = getResources().getStringArray(valueid);
@@ -452,5 +494,12 @@ public class WakeupTimerActivity extends PreferenceActivity  {
     	}
     	
     }
+	@Override
+	protected void onDestroy() {
+		// TODO 自動生成されたメソッド・スタブ
+		adView.destroy();
+		
+		super.onDestroy();
+	}
 
 }
