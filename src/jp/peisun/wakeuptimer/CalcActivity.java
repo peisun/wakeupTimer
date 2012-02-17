@@ -445,6 +445,16 @@ public class CalcActivity extends Activity implements OnClickListener {
 			}
 
 		});
+		dlg.setOnCancelListener(new DialogInterface.OnCancelListener(){
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				stopCountDown();
+				isCalc = false;
+				finish(); /* プレビューなら終わる */
+			}
+			
+		});
 		return dlg.create();
 
 
@@ -472,6 +482,19 @@ public class CalcActivity extends Activity implements OnClickListener {
 				finish();
 			}
 
+		});
+		mFinishdlg.setOnCancelListener(new DialogInterface.OnCancelListener(){
+
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				
+				Intent intent = new Intent(timerService.ACTION_FINISH);
+				startService(intent);
+				stopCountDown();
+				isCalc = false;
+				finish(); /* プレビューなら終わる */
+			}
+			
 		});
 		return mFinishdlg.create();
 
