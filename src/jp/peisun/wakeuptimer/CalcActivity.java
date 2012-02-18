@@ -37,7 +37,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	private final int TERM_2_SIZE = 10;
 	private final int TERM_3_SIZE = 1000;
 
-	private int mTermStep = 0;
+	private int mTermStepUpLine = 0;
 	private int mTermStepSize = 100;
 
 
@@ -148,11 +148,12 @@ public class CalcActivity extends Activity implements OnClickListener {
 					mRepeat = Math.abs(r.nextInt()%20);
 				}while(mRepeat < 10);
 			}
+			// 計算問題の桁数を増やす境界条件となる値を設定
 			if(mRepeat % 2 == 1){
-				mTermStep = mRepeat-1;
+				mTermStepUpLine = (mRepeat+1)/2;
 			}
 			else {
-				mTermStep = mRepeat;
+				mTermStepUpLine = mRepeat/2;
 			}
 			showDialog(START_DIALOG_ID);
 			createExpression();
@@ -183,6 +184,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			b = Math.abs(r.nextInt() % (mTermStepSize/10));
 		}while(b == 0);
 		do {
+			
 			c = Math.abs(r.nextInt() % mTermStepSize);
 		}while(c == 0);
 		// 足し算だけではつまらないので引き算を入れる
@@ -204,7 +206,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 
 		//　設問数の半分くらいで、桁を上げる
 		// 3桁以上は面倒なのでやらない
-		if(mTermStep/2 >= mRepeat && !(mTermStepSize >= 1000)){
+		if(mTermStepUpLine == mRepeat){
 			mTermStepSize *= 10;
 		}
 
