@@ -31,6 +31,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.os.Vibrator;
 import android.util.Log;
 
@@ -47,7 +48,7 @@ public class timerService extends Service {
 	 * インテント
 	 */
 	public static final String ACTION_WAKEUP = "jp.peisun.wakeupTimer.intent.wakeup";
-	
+
 	public static final String SOUND_PALY = "jp.peisun.wakeupTimer.intent.soundPlay";
 	public static final String SOUND_STOP = "jp.peisun.wakeupTimer.intent.soundStop";
 	public static final String SOUND_SET = "jp.peisun.wakeupTimer.intent.soundSet";
@@ -70,12 +71,10 @@ public class timerService extends Service {
 	public static final String CONFIG = "config";
 
 	/*
-	 * Alarmを再設定するまでの時間稼ぎ
+	 * Alarmを設定するIntent
 	 */
-	private AlarmManager mAmWakeup = null;
-	private final Intent broadcast_wakeup = new Intent(wakeupReceiver.BROADCAST_WAKEUP);
-	private PendingIntent mAlarmSender = null;
-	
+	private final Intent broadcast_wakeup = new Intent(wakeupReceiver.BROADCAST_ALARM_WAKEUP);
+
 	//　設定値
 	private ConfigData mConfig = new ConfigData();
 
@@ -85,16 +84,15 @@ public class timerService extends Service {
 	public final static int AUDIO_STREAMTYPE = AudioManager.STREAM_ALARM;
 	MediaPlayer mMediaPlayer = null;
 	/* バイブレーション */
-	private Vibrator vibrator=null;
+	
 	// 0秒後に3秒振動、1秒待って3秒振動、1秒待って3秒振動...
 	private final long[] pattern = {0,3000, 1000, 3000, 1000, 3000, 1000}; // OFF/ON/OFF/ON/OFF...
 
 	/*
 	 * スヌーズのアラーム関連
 	 */
-	private final Intent mSnoozeIntent = new Intent(ACTION_WAKEUP);
-	private AlarmManager mAmSnooze = null;
-	private PendingIntent mSnoozSender = null;
+	private final Intent mSnoozeIntent = new Intent(wakeupReceiver.BROADCAST_SNOOZE_WAKEUP);
+
 
 	/* 画面ロック解除 */
 	private PowerManager.WakeLock mWakeLock;
@@ -178,18 +176,19 @@ public class timerService extends Service {
 			mConfig.mVabration = intent.getBooleanExtra(VIBRATION, mConfig.mVabration);
 			int hour = intent.getIntExtra(SET_HOUR, mConfig.hour);
 			int minute = intent.getIntExtra(SET_MINUTE, mConfig.minute);
+
 			if(hour != mConfig.hour || minute != mConfig.minute){
 				mConfig.hour = hour;
 				mConfig.minute = minute;
 			}
-			
+
 			if(mConfig.mAlarmOn == true){
-				alarmSetCancel();
 				alarmSetTime(mConfig.hour,mConfig.minute);
 			}
 			else {
 				alarmSetCancel();
 			}
+
 
 			writeFile(mConfig);
 
@@ -233,29 +232,28 @@ public class timerService extends Service {
 
 		else if(Action.equals(ACTION_WAKEUP)){
 			Log.d(TAG,"intent:"+ACTION_WAKEUP);
-			if(mConfig.mAlarmOn ==true){
-				// 画面ロックを外す
-				returnFromSleep();
-				if(mAmSnooze == null){
-					// 現在のアラームをキャンセルして、翌日にアラームを設定
-					alarmSetCancel();
-					alarmSetNextDay();
-				}
-
-				// アラームの鳴動
-				soundPlay(mConfig.mRingtonePath);
-				vabrationStart();
-
-				// CalcActivityを呼び出す
-				Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
-				ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
-				ia.putExtra(CalcActivity.PREVIEW, false);
-				ia.putExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
-				ia.putExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
-				Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
-				ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				startActivity(ia);
+			Boolean intent_snooze = intent.getBooleanExtra(wakeupReceiver.SNOOZE_INTENT, false);
+			// 画面ロックを外す
+			returnFromSleep();
+			if(intent_snooze == false){
+				// 現在のアラームをキャンセルして、翌日にアラームを設定
+				alarmSetNextDay();
 			}
+
+			// アラームの鳴動
+			soundPlay(mConfig.mRingtonePath);
+			vabrationStart();
+
+			// CalcActivityを呼び出す
+			Intent ia = new Intent(getApplicationContext(),CalcActivity.class);
+			ia.setAction("jp.peisun.wakeupTimer.intent.calcActivity");
+			ia.putExtra(CalcActivity.PREVIEW, false);
+			ia.putExtra(CalcActivity.REPEAT, mConfig.mCalcRepeat);
+			ia.putExtra(CalcActivity.LIMITTIME, mConfig.mLimitTime);
+			Log.d(TAG,"startActivity Repeat" + mConfig.mCalcRepeat+ " LimitTime "+mConfig.mLimitTime);
+			ia.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(ia);
+
 
 
 		}
@@ -318,11 +316,12 @@ public class timerService extends Service {
 	}
 
 	private void alarmSetTime(int hour, int minute){
-
 		// Schedule the alarm!
 		// 設定時刻より、現時刻が大きい値だったら、次の日にする
-		Calendar rightNow = Calendar.getInstance();
+
+		final Calendar rightNow = Calendar.getInstance();
 		Calendar setDate = Calendar.getInstance();
+
 		setDate.set(Calendar.HOUR_OF_DAY, hour);
 		setDate.set(Calendar.MINUTE, minute);
 		setDate.set(Calendar.SECOND, rightNow.get(Calendar.SECOND));		
@@ -332,13 +331,23 @@ public class timerService extends Service {
 		setDate.set(Calendar.SECOND, 0);
 		setDate.set(Calendar.MILLISECOND,0);
 
-		Log.d(TAG,"setTime:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
-		mAlarmSender = PendingIntent.getBroadcast(this,0, broadcast_wakeup, 0);
-		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
+		Log.d(TAG,"setTime:"+
+				setDate.get(Calendar.YEAR)+ "/"+
+				setDate.get(Calendar.MONTH)+ "/"+
+				setDate.get(Calendar.DAY_OF_MONTH)+ " " +
+				setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
+
+
+
+		PendingIntent mAlarmSender = PendingIntent.getBroadcast(getApplicationContext(), 0, broadcast_wakeup, 0);
+
+		AlarmManager mAmWakeup =(AlarmManager)this.getSystemService(ALARM_SERVICE);
+		mAmWakeup.cancel(mAlarmSender);
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,setDate.getTimeInMillis(),mAlarmSender);
-		
+
 	}
 	private void alarmSetNextDay(){
+
 		// 翌日にアラームを設定
 		Calendar setDate = Calendar.getInstance();
 		setDate.add(Calendar.DATE, 1);
@@ -346,16 +355,19 @@ public class timerService extends Service {
 		setDate.set(Calendar.MILLISECOND,0);
 
 		Log.d(TAG,"Next Time:"+setDate.get(Calendar.DAY_OF_MONTH)+ " " +setDate.get(Calendar.HOUR_OF_DAY)+":"+setDate.get(Calendar.MINUTE));
-		mAlarmSender = PendingIntent.getBroadcast(this,0, broadcast_wakeup, 0);
-		mAmWakeup =(AlarmManager)getSystemService(ALARM_SERVICE);
+
+		//		Intent broadcast_wakeup = new Intent(wakeupReceiver.BROADCAST_ALARM_WAKEUP);
+		PendingIntent mAlarmSender = PendingIntent.getBroadcast(getApplicationContext(), 0, broadcast_wakeup, 0);
+
+		AlarmManager mAmWakeup =(AlarmManager)this.getSystemService(ALARM_SERVICE);
+		mAmWakeup.cancel(mAlarmSender);
 		mAmWakeup.set(AlarmManager.RTC_WAKEUP,setDate.getTimeInMillis(),mAlarmSender);
-		
+
 	}
 	private void alarmSetCancel(){
-		if(mAmWakeup!=null){
-			mAmWakeup.cancel(mAlarmSender);
-			mAmWakeup = null;
-		}
+		AlarmManager mAmWakeup =(AlarmManager)this.getSystemService(ALARM_SERVICE);
+		PendingIntent mAlarmSender = PendingIntent.getBroadcast(getApplicationContext(), 0, broadcast_wakeup, 0);
+		mAmWakeup.cancel(mAlarmSender);
 	}
 
 
@@ -401,35 +413,32 @@ public class timerService extends Service {
 	}
 	private void vabrationStart(){
 		if(mConfig.mVabration){
-			if(vibrator == null){
-				vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);	
-			}
+			Vibrator vibrator= (Vibrator) getSystemService(VIBRATOR_SERVICE);	
 			vibrator.vibrate(pattern, 0);
 		}
 	}
 	private void vavrationStop(){
-		if(vibrator != null){
-			vibrator.cancel();
-		}
+		Vibrator vibrator= (Vibrator) getSystemService(VIBRATOR_SERVICE);
+		vibrator.cancel();
 	}
-	
+
 	/*
 	 * スヌーズの為のAlarmをセット
 	 */
 	private void startSnooze(long snooze_time){
-
-		long snooze = System.currentTimeMillis() + mConfig.mSnoozTime;
-
+		
 		Log.d(TAG,"Snooze Set");
-		mSnoozSender = PendingIntent.getService(this,0, mSnoozeIntent, 0);
-		mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
-		mAmSnooze.set(AlarmManager.RTC_WAKEUP,snooze,mSnoozSender);
+		long current = SystemClock.elapsedRealtime();
+		current += mConfig.mSnoozTime;
+		PendingIntent mSnoozSender = PendingIntent.getBroadcast(this,0, mSnoozeIntent, 0);
+		AlarmManager mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
+		mAmSnooze.cancel(mSnoozSender);
+		mAmSnooze.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,current,mSnoozSender);
 
 	}
 	private void cancelSnooze(){
-		if(mAmSnooze != null){
-			mAmSnooze.cancel(mSnoozSender);
-			mAmSnooze = null;
-		}
+		PendingIntent mSnoozSender = PendingIntent.getService(this,0, mSnoozeIntent, 0);
+		AlarmManager mAmSnooze =(AlarmManager)getSystemService(ALARM_SERVICE);
+		mAmSnooze.cancel(mSnoozSender);
 	}
 }
