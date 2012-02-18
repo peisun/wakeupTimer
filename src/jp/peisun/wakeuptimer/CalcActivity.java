@@ -128,7 +128,13 @@ public class CalcActivity extends Activity implements OnClickListener {
 
 			mRepeat = extras.getInt(REPEAT);
 			mLimitTime = extras.getLong(LIMITTIME);
-
+		}
+		else {
+			// 発生しないとは思うが、extrasがnullの場合のテスト
+			preview = false;
+			mRepeat = Integer.parseInt(getString(R.string.repeatDefaultValue));
+			mLimitTime = Long.parseLong(getString(R.string.limittimeDefaultValue));
+		}
 			Log.d(TAG,"preview "+ preview);
 			Log.d(TAG,"mRepeat " + mRepeat);
 			Log.d(TAG,"mLimitTIme "+ mLimitTime);
@@ -148,16 +154,15 @@ public class CalcActivity extends Activity implements OnClickListener {
 			else {
 				mTermStep = mRepeat;
 			}
+			showDialog(START_DIALOG_ID);
+			createExpression();
 			setTextCountDown(mLimitTime);
-		}
+		
 	}
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
-
-		showDialog(START_DIALOG_ID);
-
-		createExpression();
+		
 		super.onResume();
 	}
 	@Override
