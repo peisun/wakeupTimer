@@ -135,35 +135,32 @@ public class CalcActivity extends Activity implements OnClickListener {
 			mRepeat = Integer.parseInt(getString(R.string.repeatDefaultValue));
 			mLimitTime = Long.parseLong(getString(R.string.limittimeDefaultValue));
 		}
-			Log.d(TAG,"preview "+ preview);
-			Log.d(TAG,"mRepeat " + mRepeat);
-			Log.d(TAG,"mLimitTIme "+ mLimitTime);
-
-			// 設問数が-1のときはランダム
-			// 但し、10問より多く、19問以下
-			if(mRepeat <= 0){
-				long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
-				Random r = new Random(seed);
-				do {
-					mRepeat = Math.abs(r.nextInt()%20);
-				}while(mRepeat < 10);
-			}
-			// 計算問題の桁数を増やす境界条件となる値を設定
-			if(mRepeat % 2 == 1){
-				mTermStepUpLine = (mRepeat+1)/2;
-			}
-			else {
-				mTermStepUpLine = mRepeat/2;
-			}
-			showDialog(START_DIALOG_ID);
-			createExpression();
-			setTextCountDown(mLimitTime);
 		
+
+		// 設問数が-1のときはランダム
+		if(mRepeat <= 0){
+			mRepeat = randomRepeat(mRepeat);
+		}
+		// 計算問題の桁数を増やす境界条件となる値を設定
+		if(mRepeat % 2 == 1){
+			mTermStepUpLine = (mRepeat+1)/2;
+		}
+		else {
+			mTermStepUpLine = mRepeat/2;
+		}
+		Log.d(TAG,"preview "+ preview);
+		Log.d(TAG,"mRepeat " + mRepeat);
+		Log.d(TAG,"mLimitTIme "+ mLimitTime);
+		
+		showDialog(START_DIALOG_ID);
+		createExpression();
+		setTextCountDown(mLimitTime);
+
 	}
 	@Override
 	protected void onResume() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 		super.onResume();
 	}
 	@Override
@@ -171,7 +168,16 @@ public class CalcActivity extends Activity implements OnClickListener {
 		// TODO 自動生成されたメソッド・スタブ
 		super.onPause();
 	}
-
+	private int randomRepeat(int repeat){
+		int rpt = 0;
+		// ランダムは10問より多く、19問以下
+		long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
+		Random r = new Random(seed);
+		do {
+			rpt = Math.abs(r.nextInt()%20);
+		}while(rpt < 10);
+		return rpt;
+	}
 	private void createExpression(){
 		long seed = System.currentTimeMillis(); // 現在時刻のミリ秒
 		Random r = new Random(seed);
@@ -184,7 +190,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 			b = Math.abs(r.nextInt() % (mTermStepSize/10));
 		}while(b == 0);
 		do {
-			
+
 			c = Math.abs(r.nextInt() % mTermStepSize);
 		}while(c == 0);
 		// 足し算だけではつまらないので引き算を入れる
@@ -385,7 +391,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 				startCountDown();
 				arg0.dismiss();
 			}
-			
+
 		});
 		// backキー対策
 		// キャンセルはできないこととする
@@ -424,7 +430,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 				createExpression();
 				startCountDown();
 			}
-			
+
 		});
 		return dlg.create();
 
@@ -432,7 +438,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 	}
 	private Dialog createPreviewFinishDialog(String text){
 		String positive_text = null;
-		
+
 		AlertDialog.Builder dlg = new AlertDialog.Builder(this);
 		dlg.setMessage(text);
 
@@ -460,7 +466,7 @@ public class CalcActivity extends Activity implements OnClickListener {
 				isCalc = false;
 				finish(); /* プレビューなら終わる */
 			}
-			
+
 		});
 		return dlg.create();
 
@@ -494,14 +500,14 @@ public class CalcActivity extends Activity implements OnClickListener {
 
 			@Override
 			public void onCancel(DialogInterface dialog) {
-				
+
 				Intent intent = new Intent(timerService.ACTION_FINISH);
 				startService(intent);
 				stopCountDown();
 				isCalc = false;
 				finish(); /* プレビューなら終わる */
 			}
-			
+
 		});
 		return mFinishdlg.create();
 
@@ -585,6 +591,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 
 		super.onDestroy();
 	}
-	
+
 
 }
