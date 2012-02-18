@@ -10,6 +10,7 @@ import android.util.Log;
 
 public class wakeupReceiver extends BroadcastReceiver {
 	private static final String TAG = "BroadcastReceiver";
+	public static final String BROADCAST_WAKEUP = "jp.peisun.wakeupTimer.intent.broadcastwakeup";
 	private Context mContext;
 	
 	@Override
@@ -21,6 +22,11 @@ public class wakeupReceiver extends BroadcastReceiver {
 			Intent i = new Intent(timerService.BOOT_ACTION);
 			mContext.startService(i);
 			Log.d(TAG,"intent:"+Intent.ACTION_BOOT_COMPLETED);
+			
+		}
+		else if(action.equals(BROADCAST_WAKEUP)){
+			Intent i = new Intent(timerService.ACTION_WAKEUP);
+			mContext.startService(i);
 			
 		}
 		// マナーモードのときに、それを解除することもできるが、

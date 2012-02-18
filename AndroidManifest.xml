@@ -60,6 +60,8 @@
             <intent-filter>
                 <!-- デバイスブート時のインテントを受け取るレシーバ -->
             <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <!-- AlarmManagerによるブロードキャスト -->
+            <action android:name="jp.peisun.wakeupTimer.intent.broadcastwakeup"/>
             <!-- マナーモードが変更されたときのインテント -->
             <action android:name="android.media.RINGER_MODE_CHANGED"/>
             </intent-filter>
