@@ -302,6 +302,8 @@ public class CalcActivity extends Activity implements OnClickListener {
 			setTextAnswer(answer);
 		}
 		else if(i== BUTTON_ENTER){
+			stopCountDown();
+			
 			CharSequence cs = numberView.getText();
 			String as = cs.toString();
 			int a;
@@ -316,7 +318,6 @@ public class CalcActivity extends Activity implements OnClickListener {
 			answer = 0;
 
 			if(a == creatAnswer){
-				stopCountDown();
 				mRepeat--;
 				if(preview){
 					showDialog(PREVIEWFINISH_CORRECT_DIALOG_ID);
